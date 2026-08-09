@@ -22,7 +22,7 @@ jobs:
           node-version-file: '.nvmrc'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm test -- --run --coverage
+      - run: pnpm -r test -- --coverage --coverage.reporter=lcov --coverage.reporter=text
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
