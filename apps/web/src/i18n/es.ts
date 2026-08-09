@@ -115,6 +115,7 @@ export const es = {
       title: 'Exportar al calendario',
       connectGoogle: 'Conectar con Google Calendar',
       downloadIcs: 'Descargar archivo .ics (Apple, Outlook, Android y otros)',
+      addGoogleRender: 'Agregar a Google Calendar (sin conexión)',
       reviewTitle: 'Revisá antes de exportar',
       reviewDescription:
         'Estos bloques ocurren al mismo tiempo o uno dentro del otro. Elegí cómo se deben ver en tu calendario:',

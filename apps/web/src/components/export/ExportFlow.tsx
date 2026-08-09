@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useScheduleStore } from '../../store/scheduleStore';
 import { dictionary } from '../../i18n/index';
 import { blocksOverlap, type Block, type Schedule, type RecurrenceFreq } from '@canectt/schema';
+import { buildGoogleCalendarRenderUrls } from '@canectt/export-engine/google-render';
 
 const fadeUp = {
   initial: { opacity: 0, y: 12 },
@@ -217,6 +218,23 @@ export function ExportFlow() {
     window.location.href = `/api/auth/google?returnTo=${encodeURIComponent(currentPath)}`;
   }
 
+  /**
+   * Abre las URLs públicas de Google Calendar "render" para todos los
+   * bloques del horario. Permite agregar eventos sueltos sin OAuth.
+   * Abre una pestaña por bloque (el navegador puede bloquear múltiples
+   * popups; si es así, el usuario verá solo la primera).
+   */
+  function openGoogleRender() {
+    if (resolvedSchedule.blocks.length === 0) return;
+    const urls = buildGoogleCalendarRenderUrls(resolvedSchedule, {
+      recurrence: freqToRecurrence(schedule.recurrence.freq),
+      byDay: schedule.recurrence.byDay,
+    });
+    for (const url of urls) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  }
+
   async function pushToGoogle() {
     setBusy(true);
     setPushResult(null);
@@ -336,6 +354,14 @@ export function ExportFlow() {
           )}
           <button type="button" className="btn btn-ghost" onClick={downloadIcs} disabled={busy}>
             {dictionary.export.calendar.downloadIcs}
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={openGoogleRender}
+            disabled={busy || resolvedSchedule.blocks.length === 0}
+          >
+            {dictionary.export.calendar.addGoogleRender}
           </button>
         </div>
         {pushResult && (
