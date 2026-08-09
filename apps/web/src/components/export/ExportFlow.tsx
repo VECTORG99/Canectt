@@ -111,7 +111,7 @@ export function ExportFlow() {
       const res = await fetch('/api/export/calendar/ics', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(schedule),
+        body: JSON.stringify({ schedule }),
       });
       if (!res.ok) throw new Error('ics failed');
       const blob = await res.blob();

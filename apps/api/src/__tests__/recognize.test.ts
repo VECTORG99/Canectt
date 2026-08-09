@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createApp } from '../app';
+import { createEmptySchedule, createEmptyBlock } from '@canectt/schema';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixturesDir = join(__dirname, '..', '..', '..', '..', 'fixtures');
@@ -21,6 +22,12 @@ interface ErrorResponse {
 interface HealthResponse {
   status: string;
   version: string;
+}
+
+function makeSchedule() {
+  const schedule = createEmptySchedule({ title: 'Test' });
+  const b1 = createEmptyBlock({ title: 'Mañana', startTime: '07:00', endTime: '08:00' });
+  return { ...schedule, blocks: [b1] };
 }
 
 describe('POST /api/recognize', () => {
@@ -41,6 +48,32 @@ describe('POST /api/recognize', () => {
     expect(body.schedule).toBeDefined();
     expect(body.schedule.blocks.length).toBeGreaterThanOrEqual(4);
     expect(body.format).toBe('markdown');
+  });
+});
+
+describe('POST /api/export/calendar/ics', () => {
+  it('genera un .ics válido', async () => {
+    const app = createApp();
+    const res = await request(app)
+      .post('/api/export/calendar/ics')
+      .send({ schedule: makeSchedule(), recurrence: 'daily', count: 7, startDate: '2025-01-06' });
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('text/calendar');
+    const text = res.text;
+    expect(text).toContain('BEGIN:VCALENDAR');
+    expect(text).toContain('SUMMARY:Mañana');
+    expect(text).toContain('RRULE:FREQ=DAILY;COUNT=7');
+  });
+});
+
+describe('POST /api/export/md', () => {
+  it('genera un Markdown tabulado', async () => {
+    const app = createApp();
+    const res = await request(app).post('/api/export/md').send(makeSchedule());
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('text/markdown');
+    expect(res.text).toContain('# Test');
+    expect(res.text).toContain('07:00 - 08:00');
   });
 });
 
