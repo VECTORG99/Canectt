@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Pregunta o discusión
-    url: https://github.com/OWNER/canectt/discussions
+    url: https://github.com/VECTORG99/Canectt/discussions
     about: Para preguntas que no son bugs ni features, usa Discussions.
   - name: Reportar vulnerabilidad de seguridad
-    url: https://github.com/OWNER/canectt/security/advisories/new
+    url: https://github.com/VECTORG99/Canectt/security/advisories/new
     about: Por favor NO abras un Issue público para vulnerabilidades. Usa Security Advisories privadas.
