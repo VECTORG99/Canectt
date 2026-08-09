@@ -12,6 +12,7 @@ import { env } from './env.js';
 import { recognizeRouter } from './routes/recognize.js';
 import { exportRouter } from './routes/export.js';
 import { authRouter } from './routes/auth.js';
+import { schedulesRouter } from './routes/schedules.js';
 
 export function createApp(): express.Express {
   const app = express();
@@ -57,6 +58,7 @@ export function createApp(): express.Express {
   app.use('/api/recognize', recognizeRouter);
   app.use('/api/export', exportRouter);
   app.use('/api/auth', authRouter);
+  app.use('/api/schedules', schedulesRouter);
 
   // Manejo de errores centralizado.
   app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
