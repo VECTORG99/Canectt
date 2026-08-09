@@ -19,3 +19,4 @@ export { parseMarkdown, type ParseMarkdownOptions } from './parsers/markdown.js'
 export { parsePdf, type ParsePdfOptions, type ParsePdfResult } from './parsers/pdf.js';
 export { parseDocx, type ParseDocxOptions } from './parsers/docx.js';
 export { parseXlsx, type ParseXlsxOptions } from './parsers/xlsx.js';
+export { ocrImage, ocrImages, type OcrOptions, type OcrProgressCallback } from './ocr.js';
