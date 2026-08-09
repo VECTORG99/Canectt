@@ -41,3 +41,5 @@ session-store/
 # Temporales
 tmp/
 *.tmp
+*.d.ts
+*.config.d.ts
