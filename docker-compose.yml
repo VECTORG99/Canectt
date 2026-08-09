@@ -1,0 +1,34 @@
+version: '3.9'
+
+services:
+  canectt:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '5173:5173' # Web (Vite preview / serve)
+      - '8787:8787' # API (Express)
+    environment:
+      NODE_ENV: production
+      API_PORT: 8787
+      API_PUBLIC_URL: http://localhost:8787
+      WEB_PUBLIC_URL: http://localhost:5173
+      CORS_ALLOWED_ORIGINS: http://localhost:5173
+      # Google OAuth — configurar en .env o docker-compose.override.yml
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:8787/api/auth/google/callback}
+      SESSION_SECRET: ${SESSION_SECRET:-change-me-in-production}
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:8787/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
