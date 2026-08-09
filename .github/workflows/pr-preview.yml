@@ -1,0 +1,106 @@
+name: pr-preview
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, closed]
+
+concurrency:
+  group: pr-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+  pages: write
+  id-token: write
+
+jobs:
+  preview:
+    name: Deploy preview del frontend
+    runs-on: ubuntu-latest
+    # Solo ejecutar si el PR no está cerrado.
+    if: github.event.action != 'closed'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build web
+        run: pnpm build:web
+      - name: Upload preview artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-${{ github.event.pull_request.number }}
+          path: apps/web/dist
+          retention-days: 7
+      - name: Comment on PR with preview link
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const artifactName = `preview-${prNumber}`;
+            const body = [
+              '## 🌐 Preview del frontend',
+              '',
+              `El build del frontend está disponible como artifact: **${artifactName}**`,
+              '',
+              'Para verlo:',
+              `1. Descarga el artifact [${artifactName}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`,
+              '2. Descomprime y sirve con `npx serve dist` o abre `dist/index.html`',
+              '',
+              '_El artifact se elimina automáticamente después de 7 días._',
+            ].join('\n');
+
+            // Buscar comentario existente para actualizarlo.
+            const comments = await github.rest.issues.listComments({
+              ...context.repo,
+              issue_number: prNumber,
+            });
+            const existing = comments.data.find(c =>
+              c.body.includes('🌐 Preview del frontend')
+            );
+            if (existing) {
+              await github.rest.issues.updateComment({
+                ...context.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: prNumber,
+                body,
+              });
+            }
+
+  cleanup:
+    name: Limpiar preview al cerrar PR
+    runs-on: ubuntu-latest
+    if: github.event.action == 'closed'
+    steps:
+      - name: Delete preview artifact
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const artifactName = `preview-${prNumber}`;
+            const artifacts = await github.rest.actions.listArtifactsForRepo({
+              ...context.repo,
+              per_page: 100,
+            });
+            const artifact = artifacts.data.artifacts.find(a => a.name === artifactName);
+            if (artifact) {
+              await github.rest.actions.deleteArtifact({
+                ...context.repo,
+                artifact_id: artifact.id,
+              });
+              core.info(`Artifact ${artifactName} eliminado.`);
+            } else {
+              core.info(`Artifact ${artifactName} no encontrado.`);
+            }
