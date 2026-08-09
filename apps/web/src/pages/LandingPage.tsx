@@ -39,7 +39,7 @@ export default function LandingPage() {
         style={{ borderColor: 'var(--color-border)' }}
       >
         <a
-          href="https://github.com/OWNER/canectt"
+          href="https://github.com/canectt/canectt"
           target="_blank"
           rel="noreferrer noopener"
           className="hover:text-text-primary"
@@ -56,9 +56,14 @@ export default function LandingPage() {
           {dictionary.landing.footer.license}
         </a>
         <span aria-hidden="true">·</span>
-        <Link to="/docs" className="hover:text-text-primary">
+        <a
+          href="https://github.com/canectt/canectt/tree/main/docs"
+          target="_blank"
+          rel="noreferrer noopener"
+          className="hover:text-text-primary"
+        >
           {dictionary.landing.footer.docs}
-        </Link>
+        </a>
       </footer>
     </div>
   );

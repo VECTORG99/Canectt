@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useScheduleStore } from '../../store/scheduleStore';
 import { dictionary } from '../../i18n/index';
-import { blocksOverlap, type Block } from '@canectt/schema';
+import { blocksOverlap, type Block, type Schedule, type RecurrenceFreq } from '@canectt/schema';
 
 const fadeUp = {
   initial: { opacity: 0, y: 12 },
@@ -11,6 +12,23 @@ const fadeUp = {
 };
 
 type FileFormat = 'pdf' | 'docx' | 'xlsx' | 'md';
+type RecurrenceType = 'none' | 'daily' | 'weekdays' | 'weekly' | 'custom';
+
+/** Convierte RecurrenceFreq (esquema canónico) a RecurrenceType (API) de forma type-safe. */
+function freqToRecurrence(freq: RecurrenceFreq): RecurrenceType {
+  switch (freq) {
+    case 'NONE':
+      return 'none';
+    case 'DAILY':
+      return 'daily';
+    case 'WEEKDAYS':
+      return 'weekdays';
+    case 'WEEKLY':
+      return 'weekly';
+    case 'CUSTOM':
+      return 'custom';
+  }
+}
 
 interface ConflictGroup {
   id: string;
@@ -58,7 +76,6 @@ function detectConflicts(blocks: Block[]): ConflictGroup[] {
       }
     }
     if (cluster.length > 1) {
-      // Evitar duplicar grupos que ya son anidados.
       const ids = new Set(cluster.map((c) => c.id));
       const alreadyNested = groups.some((g) => g.blocks.every((b) => ids.has(b.id)));
       if (!alreadyNested) {
@@ -70,6 +87,46 @@ function detectConflicts(blocks: Block[]): ConflictGroup[] {
   return groups;
 }
 
+/**
+ * Aplica la resolución de conflictos al horario:
+ * - 'separate': deja los bloques como están (eventos separados).
+ * - 'combine': fusiona los bloques del grupo en un solo evento, mencionando
+ *   los sub-eventos en la descripción.
+ */
+function applyResolutions(
+  schedule: Schedule,
+  conflicts: ConflictGroup[],
+  resolutions: Record<string, 'separate' | 'combine'>,
+): Schedule {
+  const blocksToRemove = new Set<string>();
+  const blocksToUpdate = new Map<string, { notes: string }>();
+
+  for (const group of conflicts) {
+    if (resolutions[group.id] !== 'combine') continue;
+    // Combinar: el primer bloque (o el padre) absorbe a los demás.
+    const [primary, ...rest] = group.blocks;
+    if (!primary) continue;
+    const subEventNames = rest.map((b) => `${b.title} (${b.startTime}–${b.endTime})`).join('; ');
+    const existingNotes = primary.notes ?? '';
+    const combinedNotes = [existingNotes, existingNotes ? '' : '', `Sub-eventos: ${subEventNames}`]
+      .filter(Boolean)
+      .join('\n');
+    blocksToUpdate.set(primary.id, { notes: combinedNotes });
+    for (const b of rest) {
+      blocksToRemove.add(b.id);
+    }
+  }
+
+  const blocks = schedule.blocks
+    .filter((b) => !blocksToRemove.has(b.id))
+    .map((b) => {
+      const update = blocksToUpdate.get(b.id);
+      return update ? { ...b, notes: update.notes } : b;
+    });
+
+  return { ...schedule, blocks };
+}
+
 export function ExportFlow() {
   const schedule = useScheduleStore((s) => s.schedule);
   const conflicts = useMemo(() => detectConflicts(schedule.blocks), [schedule.blocks]);
@@ -78,8 +135,31 @@ export function ExportFlow() {
     Record<string, 'separate' | 'combine'>
   >({});
   const [busy, setBusy] = useState(false);
+  const [googleConnected, setGoogleConnected] = useState(false);
+  const [pushResult, setPushResult] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+
+  // Detectar si volvemos de OAuth (parámetro google=connected en la URL).
+  useEffect(() => {
+    if (searchParams.get('google') === 'connected') {
+      setGoogleConnected(true);
+    }
+    // Verificar estado real de la sesión.
+    fetch('/api/auth/status')
+      .then((r) => r.json())
+      .then((data: { connected?: boolean }) => setGoogleConnected(Boolean(data.connected)))
+      .catch(() => {
+        /* ignore */
+      });
+  }, [searchParams]);
 
   const needsReview = conflicts.length > 0 && !reviewed;
+
+  /** Horario con resoluciones aplicadas (para exportación). */
+  const resolvedSchedule = useMemo(
+    () => applyResolutions(schedule, conflicts, resolutionByGroup),
+    [schedule, conflicts, resolutionByGroup],
+  );
 
   async function downloadFile(format: FileFormat) {
     setBusy(true);
@@ -87,19 +167,18 @@ export function ExportFlow() {
       const res = await fetch('/api/export/' + format, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(schedule),
+        body: JSON.stringify(resolvedSchedule),
       });
       if (!res.ok) throw new Error('export failed');
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      const ext = format === 'md' ? 'md' : format;
-      a.download = `${schedule.title || 'horario'}.${ext}`;
+      a.download = `${schedule.title || 'horario'}.${format}`;
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      // TODO: feedback de error visible.
+      setPushResult(dictionary.export.calendar.fileError);
     } finally {
       setBusy(false);
     }
@@ -111,7 +190,11 @@ export function ExportFlow() {
       const res = await fetch('/api/export/calendar/ics', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ schedule }),
+        body: JSON.stringify({
+          schedule: resolvedSchedule,
+          recurrence: freqToRecurrence(schedule.recurrence.freq),
+          byDay: schedule.recurrence.byDay,
+        }),
       });
       if (!res.ok) throw new Error('ics failed');
       const blob = await res.blob();
@@ -121,14 +204,48 @@ export function ExportFlow() {
       a.download = `${schedule.title || 'horario'}.ics`;
       a.click();
       URL.revokeObjectURL(url);
+    } catch {
+      setPushResult(dictionary.export.calendar.icsError);
     } finally {
       setBusy(false);
     }
   }
 
   function connectGoogle() {
-    // Inicia flujo OAuth en el backend.
-    window.location.href = '/api/auth/google';
+    // Inicia flujo OAuth en el backend, con returnTo a la página actual.
+    const currentPath = window.location.pathname;
+    window.location.href = `/api/auth/google?returnTo=${encodeURIComponent(currentPath)}`;
+  }
+
+  async function pushToGoogle() {
+    setBusy(true);
+    setPushResult(null);
+    try {
+      const res = await fetch('/api/auth/google/push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          schedule: resolvedSchedule,
+          recurrence: freqToRecurrence(schedule.recurrence.freq),
+          byDay: schedule.recurrence.byDay,
+        }),
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        setPushResult(body.error ?? dictionary.export.calendar.error);
+        return;
+      }
+      const result = (await res.json()) as { created: number; errors: string[] };
+      if (result.errors.length > 0) {
+        setPushResult(`${dictionary.export.calendar.error} (${result.errors.length} errores)`);
+      } else {
+        setPushResult(dictionary.export.calendar.success);
+      }
+    } catch {
+      setPushResult(dictionary.export.calendar.error);
+    } finally {
+      setBusy(false);
+    }
   }
 
   if (needsReview) {
@@ -196,18 +313,40 @@ export function ExportFlow() {
       <div className="card p-6">
         <h3 className="font-primary text-xl font-bold">{dictionary.export.calendar.title}</h3>
         <div className="mt-4 flex flex-col gap-3 tablet:flex-row tablet:flex-wrap">
-          <button
-            type="button"
-            className="btn btn-primary btn-shine"
-            onClick={connectGoogle}
-            disabled={busy}
-          >
-            {dictionary.export.calendar.connectGoogle}
-          </button>
+          {googleConnected ? (
+            <button
+              type="button"
+              className="btn btn-primary btn-shine"
+              onClick={pushToGoogle}
+              disabled={busy}
+            >
+              {busy
+                ? dictionary.export.calendar.creatingEvents
+                : dictionary.export.calendar.connectGoogle}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="btn btn-primary btn-shine"
+              onClick={connectGoogle}
+              disabled={busy}
+            >
+              {dictionary.export.calendar.connectGoogle}
+            </button>
+          )}
           <button type="button" className="btn btn-ghost" onClick={downloadIcs} disabled={busy}>
             {dictionary.export.calendar.downloadIcs}
           </button>
         </div>
+        {pushResult && (
+          <p
+            role="status"
+            className="mt-3 text-sm"
+            style={{ color: 'var(--color-text-secondary)' }}
+          >
+            {pushResult}
+          </p>
+        )}
       </div>
 
       {/* Exportar archivos */}

@@ -1,11 +1,24 @@
-import { useMemo, useRef, useState, type MouseEvent } from 'react';
+import { useMemo, useRef, useState, useEffect, type MouseEvent } from 'react';
+import {
+  DndContext,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  closestCenter,
+} from '@dnd-kit/core';
 import { useScheduleStore } from '../../store/scheduleStore';
 import { dictionary } from '../../i18n/index';
-import { timeToMinutes, minutesToTime } from './timeUtils';
+import { timeToMinutes, minutesToTime, snapMinutes } from './timeUtils';
 import { BlockCard } from './BlockCard';
+import { scheduleDefaults } from '@canectt/config';
 import type { Block } from '@canectt/schema';
 
-const ROW_HEIGHT_PX = 64; // móvil: 56 — ver config/schedule-defaults.json
+const ROW_HEIGHT_PX = scheduleDefaults.editor.rowHeightPx;
+const MOBILE_ROW_HEIGHT_PX = scheduleDefaults.editor.mobileRowHeightPx;
+const SNAP_MINUTES = scheduleDefaults.editor.defaultSnapMinutes;
+const DEFAULT_BLOCK_DURATION = scheduleDefaults.editor.defaultBlockDurationMinutes;
 const HOUR_LABEL_WIDTH = 56;
 
 interface ColumnAssignment {
@@ -16,18 +29,14 @@ interface ColumnAssignment {
 
 /** Asigna columnas a bloques que se solapan (sin relación padre-hijo). */
 function assignColumns(blocks: Block[]): ColumnAssignment[] {
-  // Solo bloques raíz (sin parentId) se columnan; los hijos se indentan dentro del padre.
   const roots = blocks.filter((b) => b.parentId === null);
   const children = blocks.filter((b) => b.parentId !== null);
 
-  // Ordenar por inicio.
   const sorted = [...roots].sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
 
-  // Greedy column assignment.
   const assignments = new Map<string, { column: number; columnCount: number }>();
-  const columnEnds: number[] = []; // columnEnds[i] = fin (min) de la última reunión en columna i
+  const columnEnds: number[] = [];
 
-  // Primero calcular grupos de solapamiento para saber columnCount por bloque.
   type Group = { members: Block[]; maxEnd: number };
   const groups: Group[] = [];
   for (const block of sorted) {
@@ -82,13 +91,39 @@ function assignColumns(blocks: Block[]): ColumnAssignment[] {
 export function ScheduleGrid() {
   const schedule = useScheduleStore((s) => s.schedule);
   const addBlock = useScheduleStore((s) => s.addBlock);
+  const updateBlock = useScheduleStore((s) => s.updateBlock);
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(600);
+  const [isMobile, setIsMobile] = useState(false);
 
+  // Detectar mobile para usar rowHeightPx adecuado.
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 640px)');
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    setIsMobile(mq.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  // Observar ancho del contenedor para columnas responsivas.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const w = entry.contentRect.width - HOUR_LABEL_WIDTH;
+        if (w > 0) setContainerWidth(w);
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const rowHeight = isMobile ? MOBILE_ROW_HEIGHT_PX : ROW_HEIGHT_PX;
   const dayStart = timeToMinutes(schedule.dayRange.startTime);
   const dayEnd = timeToMinutes(schedule.dayRange.endTime);
   const totalMinutes = dayEnd - dayStart;
-  const pxPerMinute = ROW_HEIGHT_PX / 60;
+  const pxPerMinute = rowHeight / 60;
   const totalHeight = totalMinutes * pxPerMinute;
 
   const hours = useMemo(() => {
@@ -101,24 +136,75 @@ export function ScheduleGrid() {
 
   const assignments = useMemo(() => assignColumns(schedule.blocks), [schedule.blocks]);
 
-  // Observar ancho del contenedor para columnas responsivas.
-  useMemo(() => {
-    if (containerRef.current) {
-      const w = containerRef.current.clientWidth - HOUR_LABEL_WIDTH;
-      if (w > 0 && w !== containerWidth) setContainerWidth(w);
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 150, tolerance: 8 },
+    }),
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, delta } = event;
+    const id = String(active.id);
+    const block = schedule.blocks.find((b) => b.id === id);
+    if (!block) return;
+
+    const deltaMinutes = snapMinutes(Math.round(delta.y / pxPerMinute), SNAP_MINUTES);
+    if (deltaMinutes === 0) return;
+
+    const type = active.data.current?.type as 'move' | 'resize-top' | 'resize-bottom' | undefined;
+    if (!type) return;
+
+    if (type === 'move') {
+      const newStart = Math.max(
+        dayStart,
+        Math.min(dayEnd - 5, timeToMinutes(block.startTime) + deltaMinutes),
+      );
+      const duration = timeToMinutes(block.endTime) - timeToMinutes(block.startTime);
+      const newEnd = Math.min(dayEnd, newStart + duration);
+      updateBlock(id, {
+        startTime: minutesToTime(newStart),
+        endTime: minutesToTime(newEnd),
+      });
+    } else if (type === 'resize-top') {
+      const currentStart = timeToMinutes(block.startTime);
+      const currentEnd = timeToMinutes(block.endTime);
+      const newStart = Math.max(
+        dayStart,
+        Math.min(
+          currentEnd - scheduleDefaults.editor.minBlockDurationMinutes,
+          currentStart + deltaMinutes,
+        ),
+      );
+      updateBlock(id, { startTime: minutesToTime(newStart) });
+    } else if (type === 'resize-bottom') {
+      const currentStart = timeToMinutes(block.startTime);
+      const currentEnd = timeToMinutes(block.endTime);
+      const newEnd = Math.min(
+        dayEnd,
+        Math.max(
+          currentStart + scheduleDefaults.editor.minBlockDurationMinutes,
+          currentEnd + deltaMinutes,
+        ),
+      );
+      updateBlock(id, { endTime: minutesToTime(newEnd) });
     }
-  }, [containerWidth]);
+  }
 
   function handleEmptyClick(e: MouseEvent<HTMLDivElement>) {
-    // Solo crear si el clic fue directamente en la grilla (no en un bloque).
     if (e.target !== e.currentTarget) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const y = e.clientY - rect.top;
-    const minutes = Math.round(y / pxPerMinute + dayStart);
-    const snapped = Math.round(minutes / 15) * 15;
-    const start = minutesToTime(snapped);
-    const end = minutesToTime(snapped + 30);
-    addBlock({ startTime: start, endTime: end, title: dictionary.editor.block.defaultTitle });
+    const minutes = snapMinutes(Math.round(y / pxPerMinute + dayStart), SNAP_MINUTES);
+    const start = minutesToTime(minutes);
+    const end = minutesToTime(minutes + DEFAULT_BLOCK_DURATION);
+    addBlock({
+      startTime: start,
+      endTime: end,
+      title: dictionary.editor.block.defaultTitle,
+    });
   }
 
   const childIdsByParent = new Map<string, Block[]>();
@@ -131,88 +217,92 @@ export function ScheduleGrid() {
   }
 
   return (
-    <div className="flex select-none">
-      {/* Eje de horas */}
-      <div className="relative" style={{ width: HOUR_LABEL_WIDTH }}>
-        {hours.map((h) => (
-          <div
-            key={h.label}
-            className="absolute right-2 -translate-y-1/2 text-text-secondary"
-            style={{
-              top: (h.minutes - dayStart) * pxPerMinute,
-              fontSize: 'var(--font-size-xs)',
-            }}
-          >
-            {h.label}
-          </div>
-        ))}
-      </div>
-
-      {/* Grilla de bloques */}
-      <div
-        ref={containerRef}
-        className="relative flex-1 rounded-lg border"
-        style={{
-          height: totalHeight,
-          borderColor: 'var(--color-border)',
-          background: 'var(--color-surface-variant)',
-        }}
-        onClick={handleEmptyClick}
-        role="application"
-        aria-label={dictionary.editor.title}
-      >
-        {/* Líneas de hora */}
-        {hours.map((h) => (
-          <div
-            key={h.label}
-            className="absolute left-0 right-0 border-t"
-            style={{
-              top: (h.minutes - dayStart) * pxPerMinute,
-              borderColor: 'var(--color-border)',
-              opacity: 0.5,
-            }}
-            aria-hidden="true"
-          />
-        ))}
-
-        {/* Bloques raíz */}
-        {assignments
-          .filter((a) => a.block.parentId === null)
-          .map((a) => (
-            <div key={a.block.id} style={{ position: 'absolute', inset: 0 }}>
-              <BlockCard
-                block={a.block}
-                pxPerMinute={pxPerMinute}
-                dayStartMinutes={dayStart}
-                hasChildren={(childIdsByParent.get(a.block.id)?.length ?? 0) > 0}
-                isChild={false}
-                column={a.column}
-                columnCount={a.columnCount}
-                containerWidth={containerWidth}
-              />
-              {/* Hijos dibujados encima, indentados */}
-              {(childIdsByParent.get(a.block.id) ?? []).map((child) => (
-                <BlockCard
-                  key={child.id}
-                  block={child}
-                  pxPerMinute={pxPerMinute}
-                  dayStartMinutes={dayStart}
-                  hasChildren={false}
-                  isChild={true}
-                  column={0}
-                  columnCount={1}
-                  containerWidth={containerWidth}
-                />
-              ))}
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <div className="flex select-none">
+        {/* Eje de horas */}
+        <div className="relative" style={{ width: HOUR_LABEL_WIDTH }}>
+          {hours.map((h) => (
+            <div
+              key={h.label}
+              className="absolute right-2 -translate-y-1/2 text-text-secondary"
+              style={{
+                top: (h.minutes - dayStart) * pxPerMinute,
+                fontSize: 'var(--font-size-xs)',
+              }}
+            >
+              {h.label}
             </div>
           ))}
+        </div>
 
-        {schedule.blocks.length === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center text-text-secondary">
-            {dictionary.editor.empty}
-          </div>
-        )}
+        {/* Grilla de bloques */}
+        <div
+          ref={containerRef}
+          className="relative flex-1 rounded-lg border"
+          style={{
+            height: totalHeight,
+            borderColor: 'var(--color-border)',
+            background: 'var(--color-surface-variant)',
+          }}
+          onClick={handleEmptyClick}
+          role="application"
+          aria-label={dictionary.editor.title}
+        >
+          {/* Líneas de hora */}
+          {hours.map((h) => (
+            <div
+              key={h.label}
+              className="absolute left-0 right-0 border-t"
+              style={{
+                top: (h.minutes - dayStart) * pxPerMinute,
+                borderColor: 'var(--color-border)',
+                opacity: 0.5,
+              }}
+              aria-hidden="true"
+            />
+          ))}
+
+          {/* Bloques raíz */}
+          {assignments
+            .filter((a) => a.block.parentId === null)
+            .map((a) => (
+              <div key={a.block.id} style={{ position: 'absolute', inset: 0 }}>
+                <BlockCard
+                  block={a.block}
+                  pxPerMinute={pxPerMinute}
+                  dayStartMinutes={dayStart}
+                  dayEndMinutes={dayEnd}
+                  hasChildren={(childIdsByParent.get(a.block.id)?.length ?? 0) > 0}
+                  isChild={false}
+                  column={a.column}
+                  columnCount={a.columnCount}
+                  containerWidth={containerWidth}
+                />
+                {/* Hijos dibujados encima, indentados */}
+                {(childIdsByParent.get(a.block.id) ?? []).map((child) => (
+                  <BlockCard
+                    key={child.id}
+                    block={child}
+                    pxPerMinute={pxPerMinute}
+                    dayStartMinutes={dayStart}
+                    dayEndMinutes={dayEnd}
+                    hasChildren={false}
+                    isChild={true}
+                    column={0}
+                    columnCount={1}
+                    containerWidth={containerWidth}
+                  />
+                ))}
+              </div>
+            ))}
+
+          {schedule.blocks.length === 0 && (
+            <div className="absolute inset-0 flex items-center justify-center text-text-secondary">
+              {dictionary.editor.empty}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </DndContext>
   );
 }
