@@ -1,0 +1,29 @@
+// Prisma schema para Canectt.
+//
+// Modelos de persistencia de horarios (Fase 2).
+// Los horarios se asocian a una sesión anónima (sessionId) para no
+// requerir autenticación. Cuando el usuario se autentica con Google,
+// se asocia a su googleUserId.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Schedule {
+  id        String   @id @default(uuid())
+  title     String   @default("Horario sin título")
+  timezone  String   @default("America/Santiago")
+  data      Json     // Schedule completo (schema canónico) como JSON
+  sessionId String?  // Sesión anónima (cookie)
+  googleUserId String? // Si se autenticó con Google
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sessionId])
+  @@index([googleUserId])
+}

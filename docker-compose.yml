@@ -43,6 +43,11 @@ services:
       # SESSION_SECRET es obligatorio en producción (>= 32 chars).
       # Sin valor, el backend rechaza arrancar (ver apps/api/src/env.ts).
       SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET es obligatorio}
+      # Persistencia (Fase 2): PostgreSQL.
+      DATABASE_URL: postgresql://canectt:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD es obligatorio}@db:5432/canectt
+    depends_on:
+      db:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test:
@@ -57,17 +62,21 @@ services:
       retries: 3
       start_period: 10s
 
-  # PostgreSQL — solo se activa si se usa la persistencia opcional (Fase 2).
-  # Descomentar y definir DATABASE_URL en el servicio `api` para usarla.
-  # db:
-  #   image: postgres:16-alpine
-  #   environment:
-  #     POSTGRES_DB: canectt
-  #     POSTGRES_USER: canectt
-  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD es obligatorio}
-  #   volumes:
-  #     - pgdata:/var/lib/postgresql/data
-  #   restart: unless-stopped
+  # PostgreSQL — persistencia de horarios (Fase 2).
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: canectt
+      POSTGRES_USER: canectt
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD es obligatorio}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U canectt']
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-# volumes:
-#   pgdata:
+volumes:
+  pgdata:
