@@ -11,14 +11,14 @@
     {
       "id": "range-12h-ampm",
       "description": "Rango horario 12h con am/pm, ej. '8am-9am', '8:00 AM - 9:00 PM', '8 a.m. - 9 a.m.'",
-      "regex": "(\\b([1-9]|1[0-2])(:[0-5][0-9])?\\s*(?:a\\.?m\\.?|p\\.?m\\.?)\\s*(?:[-–a]+\\s*)([1-9]|1[0-2])(:[0-5][0-9])?\\s*(a\\.?m\\.?|p\\.?m\\.?)\\b)",
+      "regex": "\\b([1-9]|1[0-2])(?::([0-5][0-9]))?\\s*(a\\.?m\\.?|p\\.?m\\.?)\\s*(?:[-–a]+\\s*)([1-9]|1[0-2])(?::([0-5][0-9]))?\\s*(a\\.?m\\.?|p\\.?m\\.?)(?!\\w)",
       "groups": {
-        "startHour": 2,
-        "startMinute": 3,
-        "startAmPm": 4,
-        "endHour": 5,
-        "endMinute": 6,
-        "endAmPm": 7
+        "startHour": 1,
+        "startMinute": 2,
+        "startAmPm": 3,
+        "endHour": 4,
+        "endMinute": 5,
+        "endAmPm": 6
       }
     },
     {
@@ -30,7 +30,7 @@
     {
       "id": "single-12h-ampm",
       "description": "Hora suelta 12h con am/pm, ej. '8am', '8:30 PM', '8 a.m.'",
-      "regex": "\\b([1-9]|1[0-2])(:[0-5][0-9])?\\s*(a\\.?m\\.?|p\\.?m\\.?)\\b",
+      "regex": "\\b([1-9]|1[0-2])(?::([0-5][0-9]))?\\s*(a\\.?m\\.?|p\\.?m\\.?)(?!\\w)",
       "groups": { "hour": 1, "minute": 2, "ampm": 3 }
     }
   ],

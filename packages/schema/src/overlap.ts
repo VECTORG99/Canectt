@@ -5,7 +5,7 @@
  *   nunca se guarda a mano.
  * - createEmptySchedule / createEmptyBlock: factories convenientes.
  */
-import type { Block, Schedule } from './schedule';
+import type { Block, Schedule } from './schedule.js';
 
 /**
  * Genera un UUID v4 usando la Web Crypto API (disponible en navegadores
@@ -103,7 +103,6 @@ export function computeOverlapGroups(blocks: Block[]): Block[] {
 
 /** Crea un bloque vacío con defaults razonables. */
 export function createEmptyBlock(partial: Partial<Block> = {}): Block {
-  const now = new Date();
   const id = partial.id ?? uuid();
   return {
     id,
@@ -114,8 +113,6 @@ export function createEmptyBlock(partial: Partial<Block> = {}): Block {
     notes: partial.notes ?? null,
     parentId: partial.parentId ?? null,
     overlapGroupId: partial.overlapGroupId ?? null,
-    // `now` solo se usa para asegurar un objeto válido; no es parte del schema.
-    ...(now ? {} : {}),
   };
 }
 

@@ -151,11 +151,16 @@ export const tokens: DesignTokens = {
     },
   },
   typography: {
-    primaryTypeface: "'Google Sans'",
-    uiTypeface: "'Google Sans Text'",
-    monoTypeface: "'Google Sans Code'",
-    fallbackStack:
-      "'Google Sans', 'Google Sans Text', Roboto, -apple-system, 'Segoe UI', sans-serif",
+    // Nota de licenciamiento: "Google Sans" / "Google Sans Text" / "Google Sans Code"
+    // son fuentes propietarias de Google cuya redistribución no está permitida,
+    // por lo que NO pueden autohospedarse legalmente. Usamos Roboto y Roboto Mono
+    // (Apache-2.0, autohospedadas vía @fontsource/roboto y @fontsource/roboto-mono),
+    // que son las equivalentes libres y canónicas de Google. El degradado de marca
+    // y el resto de la identidad visual se mantienen idénticos.
+    primaryTypeface: "'Roboto'",
+    uiTypeface: "'Roboto'",
+    monoTypeface: "'Roboto Mono'",
+    fallbackStack: "'Roboto', 'Roboto Mono', -apple-system, 'Segoe UI', system-ui, sans-serif",
     scale: {
       xs: 12,
       sm: 14,

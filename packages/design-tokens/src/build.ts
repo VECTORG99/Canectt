@@ -7,7 +7,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { tokens, type DesignTokens, type ThemeName } from './tokens';
+import { tokens, type DesignTokens, type ThemeName } from './tokens.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outDir = join(__dirname, '..', 'dist');
@@ -107,17 +107,6 @@ async function main(): Promise<void> {
   await mkdir(outDir, { recursive: true });
   await writeFile(join(outDir, 'tokens.css'), buildCss(), 'utf8');
   await writeFile(join(outDir, 'tokens.json'), buildJson(), 'utf8');
-  // Re-exportar tokens TS para consumo programático.
-  await writeFile(
-    join(outDir, 'index.js'),
-    `export { tokens } from '../src/tokens';\nexport * from '../src/tokens';\n`,
-    'utf8',
-  );
-  await writeFile(
-    join(outDir, 'index.d.ts'),
-    `export { tokens, type DesignTokens, type ThemeName, type ColorTokens, type BlockColorTokens, type ShapeTokens, type ElevationTokens, type TypographyTokens, type MotionTokens } from '../src/tokens';\n`,
-    'utf8',
-  );
   console.info('Tokens generados en', outDir);
 }
 
