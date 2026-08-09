@@ -8,10 +8,10 @@ import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import session from 'express-session';
-import { env } from './env';
-import { recognizeRouter } from './routes/recognize';
-import { exportRouter } from './routes/export';
-import { authRouter } from './routes/auth';
+import { env } from './env.js';
+import { recognizeRouter } from './routes/recognize.js';
+import { exportRouter } from './routes/export.js';
+import { authRouter } from './routes/auth.js';
 
 export function createApp(): express.Express {
   const app = express();
@@ -62,7 +62,14 @@ export function createApp(): express.Express {
   app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
     console.error(err);
     const status = (err as { status?: number }).status ?? 500;
-    res.status(status).json({ error: err.message || 'Error interno del servidor' });
+    // Errores 4xx del cliente: el mensaje es seguro de mostrar (fue producido
+    // por nuestro propio código de validación). Errores 5xx: nunca exponer
+    // detalles internos al cliente; se loguean en el servidor.
+    if (status >= 500) {
+      res.status(status).json({ error: 'Error interno del servidor.' });
+      return;
+    }
+    res.status(status).json({ error: err.message || 'Error en la solicitud.' });
   });
 
   return app;

@@ -3,7 +3,7 @@ import request from 'supertest';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createApp } from '../app';
+import { createApp } from '../app.js';
 import { createEmptySchedule, createEmptyBlock } from '@canectt/schema';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -52,7 +52,7 @@ describe('POST /api/recognize', () => {
 });
 
 describe('POST /api/export/calendar/ics', () => {
-  it('genera un .ics válido', async () => {
+  it('genera un .ics válido con horas en UTC', async () => {
     const app = createApp();
     const res = await request(app)
       .post('/api/export/calendar/ics')
@@ -63,6 +63,8 @@ describe('POST /api/export/calendar/ics', () => {
     expect(text).toContain('BEGIN:VCALENDAR');
     expect(text).toContain('SUMMARY:Mañana');
     expect(text).toContain('RRULE:FREQ=DAILY;COUNT=7');
+    // UTC con sufijo Z (no floating local).
+    expect(text).toMatch(/DTSTART:\d{8}T\d{6}Z/);
   });
 });
 

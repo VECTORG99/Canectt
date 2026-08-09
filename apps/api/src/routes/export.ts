@@ -9,7 +9,7 @@
 import { Router, type Router as RouterType, type Request, type Response } from 'express';
 import { ScheduleSchema, type Schedule } from '@canectt/schema';
 import { exportSchedule, type RecurrenceType } from '@canectt/export-engine';
-import { asyncHandler } from '../asyncHandler';
+import { asyncHandler } from '../asyncHandler.js';
 
 export const exportRouter: RouterType = Router();
 
@@ -47,6 +47,7 @@ exportRouter.post(
     const body = req.body as {
       schedule?: unknown;
       recurrence?: RecurrenceType;
+      byDay?: string[];
       startDate?: string;
       count?: number;
     };
@@ -57,6 +58,7 @@ exportRouter.post(
     }
     const result = await exportSchedule(schedule, 'ics', {
       recurrence: body.recurrence,
+      byDay: body.byDay,
       startDate: body.startDate,
       count: body.count,
     });

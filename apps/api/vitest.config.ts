@@ -5,6 +5,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@canectt/schema': join(__dirname, '..', '..', 'packages', 'schema', 'src'),
+      '@canectt/config': join(__dirname, '..', '..', 'packages', 'config', 'src'),
+      '@canectt/design-tokens': join(__dirname, '..', '..', 'packages', 'design-tokens', 'src'),
       '@canectt/recognition-engine': join(
         __dirname,
         '..',
