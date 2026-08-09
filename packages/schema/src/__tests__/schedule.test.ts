@@ -9,7 +9,7 @@ import {
   withRecomputedOverlap,
   timeToMinutes,
   minutesToTime,
-} from '../index.ts';
+} from '../index';
 
 describe('TimeStringSchema', () => {
   it('acepta HH:mm válidas', () => {

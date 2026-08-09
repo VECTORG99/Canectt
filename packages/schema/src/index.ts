@@ -1,2 +1,2 @@
-export * from './schedule.ts';
-export * from './overlap.ts';
+export * from './schedule';
+export * from './overlap';

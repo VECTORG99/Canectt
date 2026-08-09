@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { tokens } from '../tokens.ts';
+import { tokens } from '../tokens';
 
 describe('design tokens', () => {
   it('define ambos temas (light y dark)', () => {
