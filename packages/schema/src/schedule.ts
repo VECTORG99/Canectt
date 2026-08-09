@@ -76,6 +76,38 @@ export const BlockSchema = z
     }
   });
 
+/**
+ * Sub-conjunto editable de un Block (sin id ni overlapGroupId, que son
+ * gestionados por el sistema). Usado por el formulario de edición
+ * (BlockEditPanel) con zodResolver, de modo que la validación no falle
+ * por campos requeridos que no están en el formulario.
+ *
+ * Nota: `parentId` usa un preprocess que convierte '' (la opción "sin padre"
+ * de un <select> HTML) a null, para que la validación no rechace el caso
+ * válido de "bloque sin padre" cuando el formulario envía un string vacío.
+ */
+export const BlockEditSchema = z
+  .object({
+    title: z.string().min(1, 'El título del bloque es obligatorio'),
+    startTime: TimeStringSchema,
+    endTime: TimeStringSchema,
+    colorToken: BlockColorTokenSchema,
+    notes: z.string().nullable().default(null),
+    parentId: z.preprocess(
+      (v) => (v === '' || v === undefined ? null : v),
+      UuidSchema.nullable().default(null),
+    ),
+  })
+  .superRefine((block, ctx) => {
+    if (block.endTime <= block.startTime) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'endTime debe ser mayor que startTime',
+        path: ['endTime'],
+      });
+    }
+  });
+
 /** Horario completo. */
 export const ScheduleSchema = z
   .object({

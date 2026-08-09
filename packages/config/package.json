@@ -1,8 +1,8 @@
 {
-  "name": "@canectt/design-tokens",
+  "name": "@canectt/config",
   "version": "0.1.0",
   "private": true,
-  "description": "Tokens de diseño de Canectt (variables CSS y JSON) consumidos por apps/web.",
+  "description": "Configuración versionada de Canectt (config/schedule-defaults.json) consumible por frontend y backend.",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -12,25 +12,27 @@
       "types": "./src/index.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
-    },
-    "./css": "./dist/tokens.css",
-    "./json": "./dist/tokens.json"
+    }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc && tsx src/build.ts",
-    "dev": "tsc --watch & tsx watch src/build.ts",
+    "build": "tsc",
+    "dev": "tsc --watch",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
     "test": "vitest --run",
     "test:watch": "vitest"
   },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
   "devDependencies": {
-    "typescript": "^5.6.2",
+    "@types/node": "^20.14.0",
     "tsx": "^4.19.1",
+    "typescript": "^5.6.2",
     "vitest": "^2.1.1"
   }
 }

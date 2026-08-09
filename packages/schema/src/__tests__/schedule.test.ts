@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   ScheduleSchema,
   BlockSchema,
+  BlockEditSchema,
   TimeStringSchema,
   createEmptySchedule,
   createEmptyBlock,
@@ -9,7 +10,7 @@ import {
   withRecomputedOverlap,
   timeToMinutes,
   minutesToTime,
-} from '../index';
+} from '../index.js';
 
 describe('TimeStringSchema', () => {
   it('acepta HH:mm válidas', () => {
@@ -34,6 +35,42 @@ describe('BlockSchema', () => {
     const block = createEmptyBlock({ parentId: '00000000-0000-0000-0000-000000000000' });
     block.id = '00000000-0000-0000-0000-000000000000';
     expect(BlockSchema.safeParse(block).success).toBe(false);
+  });
+});
+
+describe('BlockEditSchema', () => {
+  const validBase = {
+    title: 'Bloque',
+    startTime: '08:00',
+    endTime: '09:00',
+    colorToken: 'block-blue' as const,
+    notes: '',
+  };
+  it('acepta parentId vacío (string "") y lo coerce a null (caso del <select> HTML)', () => {
+    const result = BlockEditSchema.safeParse({ ...validBase, parentId: '' });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.parentId).toBeNull();
+  });
+  it('acepta parentId null explícito', () => {
+    const result = BlockEditSchema.safeParse({ ...validBase, parentId: null });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.parentId).toBeNull();
+  });
+  it('acepta parentId undefined y lo defaultea a null', () => {
+    const result = BlockEditSchema.safeParse({ ...validBase });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.parentId).toBeNull();
+  });
+  it('acepta un UUID válido como parentId', () => {
+    const result = BlockEditSchema.safeParse({
+      ...validBase,
+      parentId: '00000000-0000-0000-0000-000000000000',
+    });
+    expect(result.success).toBe(true);
+  });
+  it('rechaza un parentId que no es UUID ni vacío/null', () => {
+    const result = BlockEditSchema.safeParse({ ...validBase, parentId: 'not-a-uuid' });
+    expect(result.success).toBe(false);
   });
 });
 
