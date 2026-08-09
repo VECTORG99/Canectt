@@ -48,6 +48,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build:web
+      - name: Install Playwright browsers
+        run: pnpm --filter @canectt/web exec playwright install --with-deps chromium
       - name: Run axe a11y audit
         run: pnpm --filter @canectt/web run a11y
 
