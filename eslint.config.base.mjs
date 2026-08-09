@@ -51,5 +51,12 @@ export default tseslint.config(
       ],
     },
   },
+  // Los hex viven únicamente en packages/design-tokens (la fuente de los tokens).
+  {
+    files: ['packages/design-tokens/**/*.{ts,tsx,js,jsx}'],
+    rules: {
+      'no-restricted-syntax': 'off',
+    },
+  },
   prettier,
 );
