@@ -1,0 +1,43 @@
+# Dependencias
+node_modules/
+.pnpm-store/
+
+# Builds
+dist/
+build/
+*.tsbuildinfo
+.turbo/
+.vite/
+
+# Tests / cobertura
+coverage/
+playwright-report/
+playwright/.cache/
+test-results/
+
+# Entorno y secretos
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Editor / SO
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OAuth / sesiones
+session-store/
+*.session
+
+# Temporales
+tmp/
+*.tmp

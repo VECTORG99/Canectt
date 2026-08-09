@@ -1,0 +1,62 @@
+{
+  "name": "canectt",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Convierte cualquier documento o entrada manual en una rutina/horario editable de arrastrar y soltar, exportable a documentos y a Google Calendar, iOS y Android.",
+  "license": "Apache-2.0",
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev:web": "pnpm --filter @canectt/web dev",
+    "dev:api": "pnpm --filter @canectt/api dev",
+    "build": "pnpm -r --filter '!@canectt/docs' build",
+    "build:web": "pnpm --filter @canectt/web build",
+    "build:api": "pnpm --filter @canectt/api build",
+    "lint": "pnpm -r lint",
+    "lint:fix": "pnpm -r lint:fix",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,css,yml,yaml}\"",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "test:watch": "pnpm -r test:watch",
+    "test:e2e": "pnpm --filter @canectt/web test:e2e",
+    "clean": "pnpm -r exec rimraf dist node_modules .turbo coverage",
+    "canectt": "tsx scripts/cli.ts",
+    "recognize:detect": "tsx scripts/recognize/detect-format.ts",
+    "recognize:pdf": "tsx scripts/recognize/parsers/pdf.ts",
+    "recognize:docx": "tsx scripts/recognize/parsers/docx.ts",
+    "recognize:xlsx": "tsx scripts/recognize/parsers/xlsx.ts",
+    "recognize:md": "tsx scripts/recognize/parsers/markdown.ts",
+    "export:pdf": "tsx scripts/export/to-pdf.ts",
+    "export:docx": "tsx scripts/export/to-docx.ts",
+    "export:xlsx": "tsx scripts/export/to-xlsx.ts",
+    "export:md": "tsx scripts/export/to-md.ts",
+    "export:ics": "tsx scripts/export/to-ics.ts",
+    "export:google": "tsx scripts/export/to-google-calendar.ts",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.4.0",
+    "@commitlint/config-conventional": "^19.4.0",
+    "@types/node": "^20.14.0",
+    "eslint": "^9.10.0",
+    "husky": "^9.1.6",
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.3.3",
+    "rimraf": "^6.0.1",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.2"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,css,yml,yaml}": [
+      "prettier --write"
+    ]
+  }
+}

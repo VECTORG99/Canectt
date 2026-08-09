@@ -1,0 +1,41 @@
+{
+  "name": "@canectt/export-engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Motor de exportación de Canectt: generadores de archivos (PDF/Word/Excel/Markdown), .ics (iCalendar RFC 5545 con RRULE) y Google Calendar API.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest --run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@canectt/schema": "workspace:*",
+    "@react-pdf/renderer": "^3.3.8",
+    "docx": "^8.5.0",
+    "exceljs": "^4.4.0",
+    "remark-stringify": "^11.0.0",
+    "unified": "^11.0.5",
+    "ics": "^3.8.1",
+    "googleapis": "^144.0.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.1"
+  }
+}
