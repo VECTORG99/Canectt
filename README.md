@@ -2,7 +2,7 @@
 
 <!-- CI badge placeholder — reemplazar cuando el workflow pr-check.yml exista -->
 
-![CI](https://github.com/OWNER/canectt/actions/workflows/pr-check.yml/badge.svg)
+![CI](https://github.com/canectt/canectt/actions/workflows/pr-check.yml/badge.svg)
 
 > Convertí cualquier documento en un horario editable y llevalo directo a tu calendario, sin copiar y pegar nada a mano.
 
@@ -15,9 +15,9 @@ Proyecto en desarrollo. Ver [`PLAN.md`](./PLAN.md) para el roadmap y los stage g
 ## Stack
 
 - **Frontend**: React 18 + Vite + TypeScript, Tailwind + tokens CSS, Framer Motion, @dnd-kit, Zustand, React Hook Form + Zod.
-- **Backend**: Node.js LTS + Express + Zod; Passport.js (Google OAuth20) solo para Calendar.
+- **Backend**: Node.js LTS + Express + Zod; OAuth 2.0 de Google (googleapis) solo para Calendar.
 - **Parsing**: unpdf (PDF), mammoth (Word), exceljs (Excel), remark+remark-gfm (Markdown).
-- **Export**: jsPDF (PDF), docx, exceljs, Markdown propio, ics (RFC 5545), googleapis (Calendar).
+- **Export**: @react-pdf/renderer (PDF), docx, exceljs, Markdown propio, ics (RFC 5545), googleapis (Calendar).
 - **Tests**: Vitest + React Testing Library; Playwright e2e; axe-core a11y.
 - **Licencia**: Apache-2.0.
 
@@ -36,8 +36,14 @@ pnpm dev:api               # http://localhost:8787 (en otra terminal)
 
 ```bash
 cp .env.example .env       # completa las variables de Google OAuth
-docker compose up --build  # web en :5173, API en :8787
+docker compose up --build  # web en http://localhost:80, API interno en :8787
 ```
+
+La arquitectura en producción usa tres servicios: `web` (Caddy sirve los
+estáticos del frontend y hace de reverse proxy hacia `/api/*`), `api`
+(backend Express) y `db` (PostgreSQL opcional, comentado por defecto). El
+navegador solo habla con Caddy en el puerto 80; las llamadas relativas
+`/api/*` se proxyan al backend automáticamente.
 
 ## Documentación
 

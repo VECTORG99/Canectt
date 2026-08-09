@@ -64,7 +64,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: License audit
-        run: pnpm exec license-checker --production --summary --failOn "GPL-3.0;AGPL-3.0;Elastic-2.0;Unlicensed" || true
+        run: pnpm exec license-checker --production --summary --failOn "GPL-3.0;AGPL-3.0;Elastic-2.0;Unlicensed"
       - name: Generate NOTICE
         run: pnpm exec license-checker --production --out NOTICE.generated.txt
       - uses: actions/upload-artifact@v4

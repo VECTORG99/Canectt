@@ -8,6 +8,7 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ## [Unreleased]
 
 ### Added
+
 - Scaffolding inicial del monorepo con pnpm workspaces.
 - Tooling base: TypeScript estricto, ESLint+Prettier, commitlint, Husky+lint-staged.
 - Archivos de gobernanza: AGENTS.md, CONTEXT.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md, GOVERNANCE.md.

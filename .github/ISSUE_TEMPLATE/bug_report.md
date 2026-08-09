@@ -1,7 +1,7 @@
 ---
 name: Bug report
 about: Reporta un bug en Canectt
-title: "[bug] "
+title: '[bug] '
 labels: bug
 ---
 
@@ -25,12 +25,12 @@ labels: bug
 
 ## Archivo involucrado (si aplica)
 
-- Formato: [ ] PDF  [ ] Word (.docx)  [ ] Excel (.xlsx)  [ ] Markdown (.md)  [ ] Manual
+- Formato: [ ] PDF [ ] Word (.docx) [ ] Excel (.xlsx) [ ] Markdown (.md) [ ] Manual
 - Adjunta el archivo (si puedes) o describe su estructura.
 
 ## Entorno
 
 - Navegador y versión:
 - Dispositivo (móvil/tablet/escritorio):
-- Tema: [ ] Claro  [ ] Oscuro  [ ] Sistema
+- Tema: [ ] Claro [ ] Oscuro [ ] Sistema
 - Versión/commit de Canectt:

@@ -47,11 +47,16 @@ Runtime dependencies:
 
 Fonts:
 
-  - Google Sans / Google Sans Text / Google Sans Code
-    Released by Google (early 2026) via Google Fonts.
-    License: see apps/web/public/fonts/LICENSE-Google-Sans.txt
-    (confirm the exact license text published alongside the font files
-     at integration time; typically SIL Open Font License on Google Fonts).
+  - Roboto / Roboto Mono (autohospedadas en apps/web/public/fonts/)
+    Released by Google under the Apache License, Version 2.0.
+    License: see apps/web/public/fonts/LICENSE-Roboto.txt
+    (copia extraída del repositorio googlefonts/roboto, que publica la
+     familia Roboto bajo Apache-2.0).
+
+  Nota: "Google Sans" / "Google Sans Text" / "Google Sans Code" son fuentes
+  propietarias de Google cuya redistribución no está permitida, por lo que
+  NO se autohospedan en este proyecto. Se usan las equivalentes libres
+  (Roboto / Roboto Mono) en su lugar.
 
 Icons:
 

@@ -7,12 +7,12 @@ import prettier from 'eslint-config-prettier';
 export default tseslint.config(
   {
     ignores: [
-      'dist/**',
-      'build/**',
-      'coverage/**',
-      'node_modules/**',
-      'playwright-report/**',
-      'test-results/**',
+      '**/dist/**',
+      '**/build/**',
+      '**/coverage/**',
+      '**/node_modules/**',
+      '**/playwright-report/**',
+      '**/test-results/**',
       'apps/web/public/**',
       'apps/web/e2e/**',
       '**/*.config.js',

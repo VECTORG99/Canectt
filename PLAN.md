@@ -52,6 +52,7 @@ Canectt/
 ## Fases y orden (con dependencias)
 
 ### Fase 0 — Scaffolding (sin lógica de negocio)
+
 - [0.1] Estructura de carpetas + `pnpm-workspace.yaml` + `package.json` raíz.
 - [0.2] Tooling: TS estricto base, ESLint+Prettier, commitlint, Husky+lint-staged, `.editorconfig`, `.nvmrc`, `.env.example`.
 - [0.3] Gobernanza: `AGENTS.md`/`AGENTS.en.md`, `CONTEXT.md`/`CONTEXT.en.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, `GOVERNANCE.md`, `LICENSE`, `NOTICE`, `CHANGELOG.md`, `README.md`.
@@ -62,12 +63,14 @@ Canectt/
 - **Commit**: `chore: scaffold monorepo + tooling + gobernanza`.
 
 ### Fase 1 — Fundación compartida
+
 - [1.1] `packages/design-tokens`: variables CSS (`--color-*`, radios, sombras, tipografía) en light/dark; build a JSON+CSS consumible.
 - [1.2] `packages/schema`: esquema Zod de `Schedule` y `Block` (data_model canónico) + tipos TS derivados + helpers (`computeOverlapGroups`, validación `parent_id`, `end_time > start_time`).
 - [1.3] `config/schedule-defaults.json` y `config/time-patterns.json` (versionados, no hardcodeados).
 - **Commit**: `feat(schema): tokens de diseño + esquema canónico de horario`.
 
 ### Fase 2 — Frontend Alpha (flujo Manual completo)
+
 - [2.1] `apps/web`: Vite + React 18 + TS estricto; Tailwind referenciando tokens; Framer Motion; @dnd-kit; Zustand; React Hook Form + Zod.
 - [2.2] Autohospedaje de Google Sans (descarga a `apps/web/public/fonts/` + `@font-face` + preload de pesos usados).
 - [2.3] Theme provider (claro/oscuro/sistema) con Context + persistencia en `localStorage` + reacción a `prefers-color-scheme`.
@@ -88,6 +91,7 @@ Canectt/
 - **Commits**: `feat(web): theme + header + landing`, `feat(web): creation hub`, `feat(web): schedule editor (flujo manual)`, `feat(web): export flow de archivos`.
 
 ### Fase 3 — Backend + recognition engine (Beta)
+
 - [3.1] `apps/api`: Express + TS estricto + Zod por request; helmet, CORS configurable, rate-limit, manejo de errores centralizado.
 - [3.2] Endpoint `POST /api/recognize` (upload con validación por magic bytes + límite tamaño/tiempo).
 - [3.3] `packages/recognition-engine`:
@@ -104,6 +108,7 @@ Canectt/
 - **Commits**: `feat(api): servidor Express + endpoint recognize`, `feat(recognition): parsers pdf/docx/xlsx/md + normalizador`.
 
 ### Fase 4 — Export engine + Google Calendar (Beta)
+
 - [4.1] `packages/export-engine`:
   - `to-pdf.ts` (@react-pdf/renderer).
   - `to-docx.ts` (docx).
@@ -121,6 +126,7 @@ Canectt/
 - **Commits**: `feat(export): pdf/docx/xlsx/md`, `feat(export): ics + RRULE`, `feat(api): OAuth Google + Calendar API`, `feat(web): paso de revisión + botón calendario`.
 
 ### Fase 5 — Tests e2e + calidad (RC)
+
 - [5.1] Playwright: 3 flujos críticos (importar→editar→exportar archivo; importar→editar→Google Calendar; manual→exportar).
 - [5.2] axe-core en CI sobre pantallas principales.
 - [5.3] Auditoría de licencias de dependencias (license-checker).
@@ -128,6 +134,7 @@ Canectt/
 - **Commit**: `test: e2e + a11y + auditoría licencias`.
 
 ### Fase 6 — Despliegue + docs finales (GA)
+
 - [6.1] `Dockerfile` por app + `docker-compose.yml` (web, api, postgres opcional).
 - [6.2] `docs/` completo (CONVENTIONS, arquitectura, política de idioma, release-stage-gates).
 - [6.3] `README.md` con badge de CI, quickstart, enlaces.
