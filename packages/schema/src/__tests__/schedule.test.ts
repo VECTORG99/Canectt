@@ -4,6 +4,9 @@ import {
   BlockSchema,
   BlockEditSchema,
   TimeStringSchema,
+  IcsExportSchema,
+  GooglePushSchema,
+  CalendarExportRecurrenceSchema,
   createEmptySchedule,
   createEmptyBlock,
   computeOverlapGroups,
@@ -147,5 +150,149 @@ describe('withRecomputedOverlap', () => {
     const result = withRecomputedOverlap(schedule);
     expect(result.blocks[0]!.overlapGroupId).not.toBeNull();
     expect(result.blocks[0]!.overlapGroupId).toBe(result.blocks[1]!.overlapGroupId);
+  });
+});
+
+describe('CalendarExportRecurrenceSchema', () => {
+  it('acepta valores válidos en minúsculas', () => {
+    expect(CalendarExportRecurrenceSchema.safeParse('none').success).toBe(true);
+    expect(CalendarExportRecurrenceSchema.safeParse('daily').success).toBe(true);
+    expect(CalendarExportRecurrenceSchema.safeParse('weekdays').success).toBe(true);
+    expect(CalendarExportRecurrenceSchema.safeParse('weekly').success).toBe(true);
+    expect(CalendarExportRecurrenceSchema.safeParse('custom').success).toBe(true);
+  });
+  it('rechaza valores inválidos', () => {
+    expect(CalendarExportRecurrenceSchema.safeParse('invalid').success).toBe(false);
+    expect(CalendarExportRecurrenceSchema.safeParse('NONE').success).toBe(false);
+    expect(CalendarExportRecurrenceSchema.safeParse('').success).toBe(false);
+  });
+});
+
+describe('IcsExportSchema', () => {
+  const validSchedule = createEmptySchedule();
+
+  it('acepta un schedule válido con defaults (recurrence=none, count=undefined)', () => {
+    const result = IcsExportSchema.safeParse({ schedule: validSchedule });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.recurrence).toBe('none');
+      expect(result.data.count).toBeUndefined();
+    }
+  });
+
+  it('acepta todos los campos opcionales válidos', () => {
+    const result = IcsExportSchema.safeParse({
+      schedule: validSchedule,
+      recurrence: 'custom',
+      byDay: ['MO', 'TU'],
+      count: 7,
+      startDate: '2025-01-06',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rechaza recurrence inválido', () => {
+    const result = IcsExportSchema.safeParse({
+      schedule: validSchedule,
+      recurrence: 'invalid',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza count negativo', () => {
+    const result = IcsExportSchema.safeParse({ schedule: validSchedule, count: -1 });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza count = 0', () => {
+    const result = IcsExportSchema.safeParse({ schedule: validSchedule, count: 0 });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza count > 365', () => {
+    const result = IcsExportSchema.safeParse({ schedule: validSchedule, count: 366 });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza count no entero', () => {
+    const result = IcsExportSchema.safeParse({ schedule: validSchedule, count: 1.5 });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza startDate con formato inválido', () => {
+    const result = IcsExportSchema.safeParse({ schedule: validSchedule, startDate: 'not-a-date' });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza byDay con día inválido', () => {
+    const result = IcsExportSchema.safeParse({ schedule: validSchedule, byDay: ['XX'] });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza byDay cuando recurrence es none', () => {
+    const result = IcsExportSchema.safeParse({
+      schedule: validSchedule,
+      recurrence: 'none',
+      byDay: ['MO'],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza byDay cuando recurrence es daily', () => {
+    const result = IcsExportSchema.safeParse({
+      schedule: validSchedule,
+      recurrence: 'daily',
+      byDay: ['MO'],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('acepta byDay cuando recurrence es custom', () => {
+    const result = IcsExportSchema.safeParse({
+      schedule: validSchedule,
+      recurrence: 'custom',
+      byDay: ['MO', 'WE'],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('acepta byDay cuando recurrence es weekly', () => {
+    const result = IcsExportSchema.safeParse({
+      schedule: validSchedule,
+      recurrence: 'weekly',
+      byDay: ['MO'],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rechaza schedule inválido', () => {
+    const result = IcsExportSchema.safeParse({ schedule: { invalid: true } });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('GooglePushSchema', () => {
+  const validSchedule = createEmptySchedule();
+
+  it('acepta calendarId', () => {
+    const result = GooglePushSchema.safeParse({
+      schedule: validSchedule,
+      calendarId: 'primary',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('funciona sin calendarId', () => {
+    const result = GooglePushSchema.safeParse({ schedule: validSchedule });
+    expect(result.success).toBe(true);
+  });
+
+  it('hereda validación de byDay contra recurrence', () => {
+    const result = GooglePushSchema.safeParse({
+      schedule: validSchedule,
+      recurrence: 'none',
+      byDay: ['MO'],
+    });
+    expect(result.success).toBe(false);
   });
 });
