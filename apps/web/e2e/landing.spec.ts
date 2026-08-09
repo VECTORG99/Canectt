@@ -5,13 +5,14 @@ test.describe('Landing page', () => {
   test('muestra el título Canectt y el CTA', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Canectt' })).toBeVisible();
-    const cta = page.getByRole('link', { name: /comenzar/i });
+    // Hay dos links "Comenzar" (header nav + hero CTA); scopeamos al main.
+    const cta = page.getByRole('main').getByRole('link', { name: /comenzar/i });
     await expect(cta).toBeVisible();
   });
 
   test('navega al creation hub al hacer clic en el CTA', async ({ page }) => {
     await page.goto('/');
-    const cta = page.getByRole('link', { name: /comenzar/i });
+    const cta = page.getByRole('main').getByRole('link', { name: /comenzar/i });
     await cta.click();
     await expect(page).toHaveURL(/\/crear/);
   });
@@ -34,8 +35,18 @@ test.describe('Theme toggle', () => {
     await expect(toggle).toBeVisible();
     // Abrir el menú de tema.
     await toggle.click();
-    const darkOption = page.getByRole('button', { name: /oscuro/i });
+    // Las opciones son menuitemradio, no buttons.
+    const darkOption = page.getByRole('menuitemradio', { name: /oscuro/i });
     await darkOption.click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  });
+
+  test('cierra el menú con Escape', async ({ page }) => {
+    await page.goto('/');
+    const toggle = page.getByRole('button', { name: /tema/i });
+    await toggle.click();
+    await expect(page.getByRole('menu')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('menu')).toBeHidden();
   });
 });

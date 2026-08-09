@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { BlockSchema, type Block, type BlockColorToken } from '@canectt/schema';
+import { BlockEditSchema, type Block, type BlockColorToken } from '@canectt/schema';
 import { useScheduleStore } from '../../store/scheduleStore';
 import { dictionary } from '../../i18n/index';
 
@@ -37,7 +37,7 @@ export function BlockEditPanel({ block }: { block: Block }) {
     watch,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(BlockSchema),
+    resolver: zodResolver(BlockEditSchema),
     defaultValues: {
       title: block.title,
       startTime: block.startTime,

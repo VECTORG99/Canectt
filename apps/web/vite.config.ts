@@ -1,14 +1,16 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { join } from 'node:path';
+import { cspPlugin } from './vite-csp-plugin';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), cspPlugin()],
   resolve: {
     alias: {
       '@': join(__dirname, 'src'),
       '@canectt/schema': join(__dirname, '..', '..', 'packages', 'schema', 'src'),
+      '@canectt/config': join(__dirname, '..', '..', 'packages', 'config', 'src'),
       '@canectt/design-tokens': join(__dirname, '..', '..', 'packages', 'design-tokens', 'src'),
     },
   },

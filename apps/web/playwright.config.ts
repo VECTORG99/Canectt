@@ -8,7 +8,9 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: [['html', { open: 'never' }], ['list']],
   use: {
-    baseURL: 'http://localhost:5173',
+    // Puerto dedicado para e2e (5180) para evitar colisiones con otros
+    // servidores que puedan estar corriendo en 5173 en el entorno local.
+    baseURL: 'http://localhost:5180',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -23,9 +25,10 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'pnpm dev',
-    url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
+    command: 'pnpm exec vite --port 5180 --strictPort',
+    url: 'http://localhost:5180',
+    // No reutilizar: garantiza que levantamos nuestra propia instancia en 5180.
+    reuseExistingServer: false,
     timeout: 30_000,
   },
 });

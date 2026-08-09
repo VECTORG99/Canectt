@@ -4,8 +4,10 @@ import { motion } from 'framer-motion';
 import { dictionary } from '../i18n/index';
 import { useScheduleStore } from '../store/scheduleStore';
 import { createEmptySchedule } from '@canectt/schema';
+import { scheduleDefaults } from '@canectt/config';
 
-const ACCEPTED_EXTENSIONS = ['.pdf', '.docx', '.md', '.xlsx'];
+const ACCEPTED_EXTENSIONS = scheduleDefaults.upload.acceptedExtensions;
+const MAX_BYTES = scheduleDefaults.upload.maxBytes;
 
 const fadeUp = {
   initial: { opacity: 0, y: 12 },
@@ -29,15 +31,27 @@ export default function CreationHubPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [showExamples, setShowExamples] = useState(false);
+  const [importing, setImporting] = useState(false);
+  // Horario reconocido pendiente de confirmación cuando hay un aviso
+  // (confianza baja o PDF escaneado). Lo guardamos y mostramos un diálogo
+  // antes de navegar al editor, en vez de fallar en silencio.
+  const [pendingImport, setPendingImport] = useState<{
+    schedule: Parameters<typeof load>[0];
+    warning: string;
+  } | null>(null);
 
   function handleManual() {
     reset();
-    const schedule = createEmptySchedule();
+    const schedule = createEmptySchedule({
+      title: 'Mi horario',
+      dayRange: { ...scheduleDefaults.editor.defaultDayRange },
+      timezone: scheduleDefaults.export.defaultTimezone,
+    });
     load(schedule);
     navigate(`/horario/${schedule.id}`);
   }
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     setError(null);
     const file = e.target.files?.[0];
     if (!file) return;
@@ -50,11 +64,52 @@ export default function CreationHubPage() {
       setError(dictionary.creation.import.uploadError.empty);
       return;
     }
-    // TODO (Fase 3): enviar al backend /api/recognize y cargar el resultado.
-    // Por ahora creamos un horario vacío y navegamos al editor.
-    const schedule = createEmptySchedule({ title: file.name.replace(/\.[^.]+$/, '') });
-    load(schedule);
-    navigate(`/horario/${schedule.id}`);
+    if (file.size > MAX_BYTES) {
+      setError(dictionary.creation.import.uploadError.tooLarge);
+      return;
+    }
+
+    setImporting(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/recognize', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        setError(body.error ?? dictionary.creation.import.uploadError.generic);
+        return;
+      }
+      const body = (await res.json()) as {
+        schedule: Parameters<typeof load>[0];
+        warning?: string | null;
+      };
+      // Si el backend devolvió un aviso (confianza baja / PDF escaneado),
+      // mostramos el horario parcial + el aviso y dejamos que el usuario
+      // decida continuar al editor. No navegamos en silencio.
+      if (body.warning) {
+        setPendingImport({ schedule: body.schedule, warning: body.warning });
+      } else {
+        load(body.schedule);
+        navigate(`/horario/${body.schedule.id}`);
+      }
+    } catch {
+      setError('Error de conexión al procesar el archivo.');
+    } finally {
+      setImporting(false);
+      // Limpiar el input para permitir re-subir el mismo archivo si hace falta.
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }
+
+  function confirmPendingImport() {
+    if (!pendingImport) return;
+    load(pendingImport.schedule);
+    const id = pendingImport.schedule.id;
+    setPendingImport(null);
+    navigate(`/horario/${id}`);
   }
 
   return (
@@ -101,8 +156,9 @@ export default function CreationHubPage() {
             type="button"
             className="btn btn-primary btn-shine mt-2 self-start"
             onClick={() => fileInputRef.current?.click()}
+            disabled={importing}
           >
-            {dictionary.creation.import.continue}
+            {importing ? 'Procesando…' : dictionary.creation.import.continue}
           </button>
           <input
             ref={fileInputRef}
@@ -176,6 +232,41 @@ export default function CreationHubPage() {
             >
               {dictionary.creation.import.examplesModalClose}
             </button>
+          </div>
+        </div>
+      )}
+
+      {pendingImport && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="warning-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+        >
+          <div
+            className="w-full max-w-lg rounded-xl border bg-surface p-6 shadow-e3"
+            style={{ borderColor: 'var(--color-border)' }}
+          >
+            <h2 id="warning-title" className="mb-3 font-primary text-xl font-bold">
+              {dictionary.creation.import.recognitionWarning}
+            </h2>
+            <p className="mb-5 text-text-secondary">{pendingImport.warning}</p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => setPendingImport(null)}
+              >
+                {dictionary.common.cancel}
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary btn-shine"
+                onClick={confirmPendingImport}
+              >
+                {dictionary.creation.import.continueAnyway}
+              </button>
+            </div>
           </div>
         </div>
       )}

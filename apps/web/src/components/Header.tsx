@@ -37,17 +37,7 @@ function ThemeToggle() {
   const { mode, setMode } = useTheme();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const options: { value: ThemeMode; label: string; icon: string }[] = [
     { value: 'light', label: dictionary.header.theme.light, icon: '☀' },
@@ -55,6 +45,45 @@ function ThemeToggle() {
     { value: 'system', label: dictionary.header.theme.system, icon: '⌂' },
   ];
   const current = options.find((o) => o.value === mode) ?? options[2]!;
+
+  // Cerrar al hacer clic fuera o al pulsar Escape.
+  useEffect(() => {
+    if (!open) return;
+    const onMouseDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onMouseDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [open]);
+
+  // Navegación por teclado: Escape cierra, flechas mueven el foco entre
+  // opciones (patrón menu de WAI-ARIA Authoring Practices).
+  function onKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Escape') {
+      setOpen(false);
+      return;
+    }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      const idx = options.findIndex((o) => o.value === mode);
+      const next = (idx + 1) % options.length;
+      itemRefs.current[next]?.focus();
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const idx = options.findIndex((o) => o.value === mode);
+      const next = (idx - 1 + options.length) % options.length;
+      itemRefs.current[next]?.focus();
+    }
+  }
 
   return (
     <div ref={menuRef} className="relative">
@@ -73,10 +102,14 @@ function ThemeToggle() {
           role="menu"
           className="absolute right-0 mt-2 w-40 rounded-md border bg-surface shadow-e2"
           style={{ borderColor: 'var(--color-border)' }}
+          onKeyDown={onKeyDown}
         >
-          {options.map((opt) => (
+          {options.map((opt, i) => (
             <li key={opt.value} role="none">
               <button
+                ref={(el) => {
+                  itemRefs.current[i] = el;
+                }}
                 type="button"
                 role="menuitemradio"
                 aria-checked={mode === opt.value}

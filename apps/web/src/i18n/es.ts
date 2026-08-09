@@ -52,6 +52,10 @@ export const es = {
         empty: 'El archivo está vacío.',
         generic: 'No pudimos procesar el archivo. Intentá de nuevo.',
       },
+      /** Aviso mostrado cuando el reconocimiento devuelve confianza baja
+       * o detecta un PDF escaneado. El usuario debe verlo antes de ir al editor. */
+      recognitionWarning: 'Aviso de reconocimiento',
+      continueAnyway: 'Continuar igual',
     },
     manual: {
       title: 'Manual',
@@ -82,6 +86,28 @@ export const es = {
       start: 'Inicio del día',
       end: 'Fin del día',
     },
+    recurrence: {
+      label: 'Repetir',
+      none: 'Nunca',
+      daily: 'Diaria',
+      weekdays: 'Días laborables',
+      weekly: 'Semanal',
+      custom: 'Personalizado',
+      days: 'Días',
+      weekdaysShort: {
+        MO: 'Lun',
+        TU: 'Mar',
+        WE: 'Mié',
+        TH: 'Jue',
+        FR: 'Vie',
+        SA: 'Sáb',
+        SU: 'Dom',
+      },
+    },
+    timezone: {
+      label: 'Zona horaria',
+      helper: 'Imprescindible para que la hora exportada al calendario sea correcta.',
+    },
     empty: 'Tocá un espacio vacío para crear tu primer bloque.',
   },
   export: {
@@ -99,6 +125,9 @@ export const es = {
       continue: 'Continuar',
       success: 'Eventos creados en tu calendario.',
       error: 'No pudimos crear los eventos. Intentá de nuevo.',
+      creatingEvents: 'Creando eventos…',
+      fileError: 'Error al exportar el archivo.',
+      icsError: 'Error al generar el archivo .ics.',
     },
     files: {
       title: 'Exportar',

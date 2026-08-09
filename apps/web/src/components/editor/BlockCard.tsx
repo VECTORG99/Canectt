@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
+import { useDraggable } from '@dnd-kit/core';
 import { useScheduleStore } from '../../store/scheduleStore';
 import { dictionary } from '../../i18n/index';
-import { blockDurationMinutes } from './timeUtils';
+import { timeToMinutes } from './timeUtils';
 import type { Block } from '@canectt/schema';
 
 interface BlockCardProps {
@@ -10,6 +11,8 @@ interface BlockCardProps {
   pxPerMinute: number;
   /** minutos desde medianoche del inicio del día visible. */
   dayStartMinutes: number;
+  /** minutos desde medianoche del fin del día visible. */
+  dayEndMinutes: number;
   /** ¿Es un bloque contenedor (tiene hijos)? */
   hasChildren: boolean;
   /** ¿Es un bloque hijo (parentId != null)? */
@@ -23,11 +26,13 @@ interface BlockCardProps {
 }
 
 const GAP_PX = 8;
+const HANDLE_HEIGHT_PX = 8;
 
 export function BlockCard({
   block,
   pxPerMinute,
   dayStartMinutes,
+  dayEndMinutes,
   hasChildren,
   isChild,
   column,
@@ -38,12 +43,8 @@ export function BlockCard({
   const removeBlock = useScheduleStore((s) => s.removeBlock);
   const editingBlockId = useScheduleStore((s) => s.editingBlockId);
 
-  const top = (blockDurationMinutes('00:00', block.startTime) + 0) * pxPerMinute; // placeholder
-  void top;
-  const startMin =
-    parseInt(block.startTime.slice(0, 2), 10) * 60 + parseInt(block.startTime.slice(3, 5), 10);
-  const endMin =
-    parseInt(block.endTime.slice(0, 2), 10) * 60 + parseInt(block.endTime.slice(3, 5), 10);
+  const startMin = timeToMinutes(block.startTime);
+  const endMin = timeToMinutes(block.endTime);
   const offsetTop = (startMin - dayStartMinutes) * pxPerMinute;
   const height = (endMin - startMin) * pxPerMinute;
 
@@ -56,6 +57,52 @@ export function BlockCard({
   const bgVar = `var(--color-${block.colorToken}-bg)`;
   const onBgVar = `var(--color-${block.colorToken}-on-bg)`;
 
+  // Draggable principal: mover el bloque verticalmente.
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: block.id,
+    data: { type: 'move' },
+  });
+
+  // Handle superior: cambiar hora de inicio (resize).
+  const {
+    attributes: topAttrs,
+    listeners: topListeners,
+    setNodeRef: setTopRef,
+    transform: topTransform,
+    isDragging: topDragging,
+  } = useDraggable({
+    id: `${block.id}-resize-top`,
+    data: { type: 'resize-top' },
+  });
+
+  // Handle inferior: cambiar hora de fin (resize).
+  const {
+    attributes: bottomAttrs,
+    listeners: bottomListeners,
+    setNodeRef: setBottomRef,
+    transform: bottomTransform,
+    isDragging: bottomDragging,
+  } = useDraggable({
+    id: `${block.id}-resize-bottom`,
+    data: { type: 'resize-bottom' },
+  });
+
+  // Transform en tiempo real durante el arrastre (feedback visual).
+  const dragY = transform?.y ?? 0;
+  const topDragY = topTransform?.y ?? 0;
+  const bottomDragY = bottomTransform?.y ?? 0;
+
+  // Durante move: desplazar todo el bloque.
+  // Durante resize-top: desplazar solo el borde superior (cambia offsetTop y height).
+  // Durante resize-bottom: desplazar solo el borde inferior (cambia height).
+  const liveOffsetTop = offsetTop + (isDragging ? dragY : topDragging ? topDragY : 0);
+  const liveHeight = height + (topDragging ? -topDragY : 0) + (bottomDragging ? bottomDragY : 0);
+
+  // Limitar visualmente dentro del rango del día.
+  const clampedTop = Math.max(0, liveOffsetTop);
+  const maxBottom = (dayEndMinutes - dayStartMinutes) * pxPerMinute;
+  const clampedHeight = Math.min(liveHeight, maxBottom - clampedTop);
+
   return (
     <motion.div
       layout
@@ -63,6 +110,9 @@ export function BlockCard({
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.2 }}
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
       role="button"
       tabIndex={0}
       aria-label={`${block.title}, ${block.startTime} a ${block.endTime}`}
@@ -74,18 +124,33 @@ export function BlockCard({
           setEditing(block.id);
         }
       }}
-      className="group absolute rounded-lg p-3 shadow-e1 transition-shadow hover:shadow-e2 focus-visible:outline-none"
+      className="group absolute touch-none rounded-lg p-3 shadow-e1 transition-shadow hover:shadow-e2 focus-visible:outline-none"
       style={{
-        top: offsetTop,
-        height: Math.max(height, 28),
+        top: clampedTop,
+        height: Math.max(clampedHeight, 28),
         left: isChild ? '8%' : left,
         width: isChild ? '92%' : colWidth,
         background: bgVar,
         color: onBgVar,
         border: hasChildren ? `2px dashed ${onBgVar}` : 'none',
-        zIndex: isChild ? 2 : 1,
+        zIndex: isChild ? 2 : isDragging ? 10 : 1,
+        cursor: isDragging ? 'grabbing' : 'grab',
+        userSelect: 'none',
       }}
     >
+      {/* Handle superior (resize) */}
+      {!isChild && (
+        <div
+          ref={setTopRef}
+          {...topAttrs}
+          {...topListeners}
+          className="absolute left-0 right-0 top-0 cursor-ns-resize"
+          style={{ height: HANDLE_HEIGHT_PX }}
+          aria-hidden="true"
+          onPointerDown={(e) => e.stopPropagation()}
+        />
+      )}
+
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate font-medium" style={{ fontSize: 'var(--font-size-sm)' }}>
@@ -102,6 +167,7 @@ export function BlockCard({
             e.stopPropagation();
             removeBlock(block.id);
           }}
+          onPointerDown={(e) => e.stopPropagation()}
           className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
           style={{ color: onBgVar }}
         >
@@ -112,6 +178,19 @@ export function BlockCard({
         <p className="mt-1 line-clamp-2 opacity-70" style={{ fontSize: 'var(--font-size-xs)' }}>
           {block.notes}
         </p>
+      )}
+
+      {/* Handle inferior (resize) */}
+      {!isChild && (
+        <div
+          ref={setBottomRef}
+          {...bottomAttrs}
+          {...bottomListeners}
+          className="absolute bottom-0 left-0 right-0 cursor-ns-resize"
+          style={{ height: HANDLE_HEIGHT_PX }}
+          aria-hidden="true"
+          onPointerDown={(e) => e.stopPropagation()}
+        />
       )}
     </motion.div>
   );
