@@ -96,10 +96,11 @@ export function recognizeBlocks(text: string, config?: TimePatternsConfig): Reco
     }
   }
 
-  // Patrón de rango 12h: "8am-9am"
+  // Patrón de rango 12h: "8am-9am", "8:00 AM - 9:00 PM"
+  // Usamos flag 'i' para que coincida con AM/PM, am/pm, A.M./P.M. etc.
   const range12 = cfg.patterns.find((p) => p.id === 'range-12h-ampm');
   if (range12) {
-    const re = new RegExp(range12.regex, 'g');
+    const re = new RegExp(range12.regex, 'gi');
     let m: RegExpExecArray | null;
     while ((m = re.exec(text)) !== null) {
       const startHour = parseInt(m[range12.groups['startHour'] ?? 2] ?? '0', 10);
@@ -151,16 +152,25 @@ function recognizeTable(text: string, cfg: TimePatternsConfig): RecognizedBlock[
   let activityCol = -1;
   let endCol = -1;
 
+  // Matching por palabra: dividimos la celda en palabras y comprobamos si
+  // alguna está en el conjunto de nombres de columna. Así "Hora inicio"
+  // (palabras: "hora", "inicio") matchea, pero "descripción" no matchea
+  // "de" por subcadena. Toleramos encabezados compuestos sin falsos positivos.
+  const matchesAny = (cell: string, names: Set<string>): boolean => {
+    const words = cell.split(/[\s/_-]+/).filter(Boolean);
+    return words.some((w) => names.has(w));
+  };
+
   for (let i = 0; i < lines.length; i++) {
     const cells = splitRow(lines[i]!);
     const lower = cells.map((c) => c.toLowerCase());
-    const ti = lower.findIndex((c) => timeNames.has(c));
-    const ai = lower.findIndex((c) => activityNames.has(c));
+    const ti = lower.findIndex((c) => matchesAny(c, timeNames));
+    const ai = lower.findIndex((c) => matchesAny(c, activityNames));
     if (ti !== -1 && ai !== -1) {
       headerIdx = i;
       timeCol = ti;
       activityCol = ai;
-      endCol = lower.findIndex((c) => endNames.has(c));
+      endCol = lower.findIndex((c) => matchesAny(c, endNames));
       break;
     }
   }
@@ -194,11 +204,15 @@ function recognizeTable(text: string, cfg: TimePatternsConfig): RecognizedBlock[
 
 /** Divide una fila de tabla por | , \t o múltiples espacios. */
 function splitRow(line: string): string[] {
-  if (line.includes('|'))
-    return line
-      .split('|')
-      .map((c) => c.trim())
-      .filter((c) => c !== '');
+  if (line.includes('|')) {
+    // Para filas delimitadas por | (markdown, etc.): split por | y trim.
+    // Solo removemos los artefactos vacíos del | inicial/final, pero
+    // PRESERVAMOS celdas vacías intermedias (columnas vacías reales).
+    const parts = line.split('|').map((c) => c.trim());
+    while (parts.length > 0 && parts[0] === '') parts.shift();
+    while (parts.length > 0 && parts[parts.length - 1] === '') parts.pop();
+    return parts;
+  }
   if (line.includes('\t')) return line.split('\t').map((c) => c.trim());
   // Múltiples espacios: dividir en 2 o más espacios seguidos.
   return line.split(/\s{2,}/).map((c) => c.trim());

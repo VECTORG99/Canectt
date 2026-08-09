@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { detectFormat } from '../detect-format';
+import { detectFormat } from '../detect-format.js';
 
 describe('detectFormat', () => {
   it('detecta PDF por magic bytes %PDF-', () => {
