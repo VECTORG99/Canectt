@@ -152,6 +152,37 @@ export const ScheduleSchema = z
     }
   });
 
+/**
+ * Opciones de exportación a calendario (ICS y Google Calendar).
+ * Valida los parámetros opcionales que el frontend envía al backend
+ * junto con el schedule. Aplica en cada frontera de la API.
+ *
+ * `recurrence` aquí usa minúsculas ('none', 'daily', ...) para coincidir
+ * con el tipo RecurrenceType del export-engine (que mapea a RRULE de ICS).
+ * Es distinto de RecurrenceFreqSchema (mayúsculas) que es el campo
+ * canónico del Schedule.
+ */
+export const CalendarExportRecurrenceSchema = z.enum([
+  'none',
+  'daily',
+  'weekdays',
+  'weekly',
+  'custom',
+]);
+
+export const ExportOptionsSchema = z.object({
+  schedule: ScheduleSchema,
+  recurrence: CalendarExportRecurrenceSchema.default('none'),
+  byDay: z.array(WeekdaySchema).optional(),
+  count: z.number().int().positive().max(365).default(30),
+  startDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'startDate debe tener formato YYYY-MM-DD')
+    .optional(),
+  /** Solo para Google Calendar push: calendario destino. */
+  calendarId: z.string().optional(),
+});
+
 /** Tipos derivados. */
 export type TimeString = z.infer<typeof TimeStringSchema>;
 export type RecurrenceFreq = z.infer<typeof RecurrenceFreqSchema>;
@@ -161,3 +192,5 @@ export type DayRange = z.infer<typeof DayRangeSchema>;
 export type BlockColorToken = z.infer<typeof BlockColorTokenSchema>;
 export type Block = z.infer<typeof BlockSchema>;
 export type Schedule = z.infer<typeof ScheduleSchema>;
+export type CalendarExportRecurrence = z.infer<typeof CalendarExportRecurrenceSchema>;
+export type ExportOptions = z.infer<typeof ExportOptionsSchema>;

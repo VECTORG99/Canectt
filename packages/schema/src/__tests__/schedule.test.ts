@@ -4,6 +4,8 @@ import {
   BlockSchema,
   BlockEditSchema,
   TimeStringSchema,
+  ExportOptionsSchema,
+  CalendarExportRecurrenceSchema,
   createEmptySchedule,
   createEmptyBlock,
   computeOverlapGroups,
@@ -147,5 +149,106 @@ describe('withRecomputedOverlap', () => {
     const result = withRecomputedOverlap(schedule);
     expect(result.blocks[0]!.overlapGroupId).not.toBeNull();
     expect(result.blocks[0]!.overlapGroupId).toBe(result.blocks[1]!.overlapGroupId);
+  });
+});
+
+describe('CalendarExportRecurrenceSchema', () => {
+  it('acepta valores válidos en minúsculas', () => {
+    expect(CalendarExportRecurrenceSchema.safeParse('none').success).toBe(true);
+    expect(CalendarExportRecurrenceSchema.safeParse('daily').success).toBe(true);
+    expect(CalendarExportRecurrenceSchema.safeParse('weekdays').success).toBe(true);
+    expect(CalendarExportRecurrenceSchema.safeParse('weekly').success).toBe(true);
+    expect(CalendarExportRecurrenceSchema.safeParse('custom').success).toBe(true);
+  });
+  it('rechaza valores inválidos', () => {
+    expect(CalendarExportRecurrenceSchema.safeParse('invalid').success).toBe(false);
+    expect(CalendarExportRecurrenceSchema.safeParse('NONE').success).toBe(false);
+    expect(CalendarExportRecurrenceSchema.safeParse('').success).toBe(false);
+  });
+});
+
+describe('ExportOptionsSchema', () => {
+  const validSchedule = createEmptySchedule();
+
+  it('acepta un schedule válido con defaults', () => {
+    const result = ExportOptionsSchema.safeParse({ schedule: validSchedule });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.recurrence).toBe('none');
+      expect(result.data.count).toBe(30);
+    }
+  });
+
+  it('acepta todos los campos opcionales válidos', () => {
+    const result = ExportOptionsSchema.safeParse({
+      schedule: validSchedule,
+      recurrence: 'daily',
+      byDay: ['MO', 'TU'],
+      count: 7,
+      startDate: '2025-01-06',
+      calendarId: 'primary',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rechaza recurrence inválido', () => {
+    const result = ExportOptionsSchema.safeParse({
+      schedule: validSchedule,
+      recurrence: 'invalid',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza count negativo', () => {
+    const result = ExportOptionsSchema.safeParse({
+      schedule: validSchedule,
+      count: -1,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza count = 0', () => {
+    const result = ExportOptionsSchema.safeParse({
+      schedule: validSchedule,
+      count: 0,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza count > 365', () => {
+    const result = ExportOptionsSchema.safeParse({
+      schedule: validSchedule,
+      count: 366,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza count no entero', () => {
+    const result = ExportOptionsSchema.safeParse({
+      schedule: validSchedule,
+      count: 1.5,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza startDate con formato inválido', () => {
+    const result = ExportOptionsSchema.safeParse({
+      schedule: validSchedule,
+      startDate: 'not-a-date',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza byDay con día inválido', () => {
+    const result = ExportOptionsSchema.safeParse({
+      schedule: validSchedule,
+      byDay: ['XX'],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza schedule inválido', () => {
+    const result = ExportOptionsSchema.safeParse({ schedule: { invalid: true } });
+    expect(result.success).toBe(false);
   });
 });

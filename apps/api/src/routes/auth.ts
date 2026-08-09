@@ -13,8 +13,7 @@
  */
 import { Router, type Router as RouterType, type Request, type Response } from 'express';
 import { randomBytes } from 'node:crypto';
-import { ScheduleSchema } from '@canectt/schema';
-import type { RecurrenceType } from '@canectt/export-engine';
+import { ExportOptionsSchema } from '@canectt/schema';
 import { env } from '../env.js';
 import { getAuthUrl, exchangeCodeForTokens, pushScheduleToCalendar } from '../google-calendar.js';
 import { asyncHandler } from '../asyncHandler.js';
@@ -119,27 +118,23 @@ authRouter.post(
       res.status(401).json({ error: 'No autenticado con Google.' });
       return;
     }
-    const body = req.body as {
-      schedule?: unknown;
-      startDate?: string;
-      recurrence?: RecurrenceType;
-      byDay?: string[];
-      count?: number;
-      calendarId?: string;
-    };
-    const parsed = ScheduleSchema.safeParse(body.schedule);
+    const parsed = ExportOptionsSchema.safeParse(req.body);
     if (!parsed.success) {
-      res.status(400).json({ error: 'Horario inválido.' });
+      res.status(400).json({
+        error: 'Parámetros de exportación inválidos.',
+        details: parsed.error.flatten(),
+      });
       return;
     }
-    const result = await pushScheduleToCalendar(parsed.data, {
+    const { schedule, recurrence, byDay, startDate, count, calendarId } = parsed.data;
+    const result = await pushScheduleToCalendar(schedule, {
       accessToken: session.googleAccessToken,
       refreshToken: session.googleRefreshToken ?? null,
-      startDate: body.startDate ?? new Date().toISOString().slice(0, 10),
-      recurrence: body.recurrence ?? 'none',
-      byDay: body.byDay,
-      count: body.count,
-      calendarId: body.calendarId,
+      startDate: startDate ?? new Date().toISOString().slice(0, 10),
+      recurrence,
+      byDay,
+      count,
+      calendarId,
     });
     res.json(result);
   }),

@@ -66,6 +66,46 @@ describe('POST /api/export/calendar/ics', () => {
     // UTC con sufijo Z (no floating local).
     expect(text).toMatch(/DTSTART:\d{8}T\d{6}Z/);
   });
+
+  it('devuelve 400 si recurrence es inválido', async () => {
+    const app = createApp();
+    const res = await request(app)
+      .post('/api/export/calendar/ics')
+      .send({ schedule: makeSchedule(), recurrence: 'invalid' });
+    expect(res.status).toBe(400);
+    const body = res.body as ErrorResponse;
+    expect(body.error).toMatch(/parámetros de exportación/i);
+  });
+
+  it('devuelve 400 si count es negativo', async () => {
+    const app = createApp();
+    const res = await request(app)
+      .post('/api/export/calendar/ics')
+      .send({ schedule: makeSchedule(), count: -1 });
+    expect(res.status).toBe(400);
+    const body = res.body as ErrorResponse;
+    expect(body.error).toMatch(/parámetros de exportación/i);
+  });
+
+  it('devuelve 400 si startDate tiene formato inválido', async () => {
+    const app = createApp();
+    const res = await request(app)
+      .post('/api/export/calendar/ics')
+      .send({ schedule: makeSchedule(), startDate: 'not-a-date' });
+    expect(res.status).toBe(400);
+    const body = res.body as ErrorResponse;
+    expect(body.error).toMatch(/parámetros de exportación/i);
+  });
+
+  it('devuelve 400 si byDay contiene un día inválido', async () => {
+    const app = createApp();
+    const res = await request(app)
+      .post('/api/export/calendar/ics')
+      .send({ schedule: makeSchedule(), byDay: ['XX'] });
+    expect(res.status).toBe(400);
+    const body = res.body as ErrorResponse;
+    expect(body.error).toMatch(/parámetros de exportación/i);
+  });
 });
 
 describe('POST /api/export/md', () => {
