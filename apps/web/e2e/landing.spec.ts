@@ -19,6 +19,16 @@ test.describe('Landing page', () => {
 
   test('no tiene violaciones críticas de accesibilidad (axe)', async ({ page }) => {
     await page.goto('/');
+    // Esperar a que el ThemeProvider inicialice (data-theme) y a que las
+    // fuentes/CSS terminen de cargar.
+    await expect(page.locator('html')).toHaveAttribute('data-theme', /.+/);
+    await page.evaluate(() => document.fonts.ready);
+    // Esperar a que termine la animación de entrada de Framer Motion
+    // (fadeUp: opacity 0→1, duration 0.4s). Si axe corre durante la
+    // animación, computa el color del texto como un blend parcial con el
+    // fondo (ej. #5F6368 sobre #FFFFFF a opacity 0.5 = #878a8e) y reporta
+    // falsos positivos de contraste.
+    await expect(page.locator('section')).toHaveCSS('opacity', '1');
     const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
     // Solo fallar si hay violaciones críticas o serias.
     const critical = results.violations.filter(
