@@ -1,4 +1,4 @@
-export { tokens } from './tokens.ts';
+export { tokens } from './tokens';
 export type {
   DesignTokens,
   ThemeName,
@@ -8,4 +8,4 @@ export type {
   ElevationTokens,
   TypographyTokens,
   MotionTokens,
-} from './tokens.ts';
+} from './tokens';

@@ -1,0 +1,119 @@
+@import '../../node_modules/@canectt/design-tokens/dist/tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-surface);
+    color: var(--color-text-primary);
+    font-family: var(--font-ui), var(--font-fallback);
+    font-size: var(--font-size-md);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  * {
+    border-color: var(--color-border);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent-blue);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  button {
+    font-family: inherit;
+  }
+}
+
+@layer components {
+  /* Botón base con efecto de brillo (shine) opcional via .btn-shine. */
+  .btn {
+    @apply relative inline-flex items-center justify-center gap-2 rounded-md
+      font-medium transition-colors duration-normal ease-standard
+      focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50;
+    padding-block: 0.625rem;
+    padding-inline: 1.25rem;
+  }
+
+  .btn-primary {
+    background: var(--color-brand-gradient);
+    color: #fff;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--color-text-primary);
+  }
+  .btn-ghost:hover {
+    background: var(--color-surface-variant);
+  }
+
+  /* Efecto de brillo diagonal en hover (decorativo; foco visible por :focus-visible). */
+  .btn-shine {
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .btn-shine::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(
+      100deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.5) 50%,
+      transparent 100%
+    );
+    transform: translateX(-150%) skewX(-25deg);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .btn-shine:hover::before {
+    animation: shine 700ms ease-out;
+  }
+  @keyframes shine {
+    to {
+      transform: translateX(250%) skewX(-25deg);
+    }
+  }
+
+  .card {
+    @apply rounded-lg border bg-surface shadow-e1;
+    border-color: var(--color-border);
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-sm px-2 py-1 text-sm
+      bg-surface-variant text-text-secondary;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    background: var(--color-brand-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}

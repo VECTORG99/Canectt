@@ -20,6 +20,10 @@ export interface ColorTokens {
   border: string;
   accentBlue: string;
   brandGradient: string;
+  /** Stops individuales del degradado de marca (para SVG, etc.). */
+  brandStopStart: string;
+  brandStopMid: string;
+  brandStopEnd: string;
 }
 
 export interface BlockColorTokens {
@@ -93,6 +97,9 @@ export const tokens: DesignTokens = {
       border: '#E0E0E0',
       accentBlue: '#4285F4',
       brandGradient: 'linear-gradient(120deg, #4285F4 0%, #9B72CB 50%, #F28B82 100%)',
+      brandStopStart: '#4285F4',
+      brandStopMid: '#9B72CB',
+      brandStopEnd: '#F28B82',
     },
     dark: {
       surface: '#131314',
@@ -102,6 +109,9 @@ export const tokens: DesignTokens = {
       border: '#3C4043',
       accentBlue: '#8AB4F8',
       brandGradient: 'linear-gradient(120deg, #8AB4F8 0%, #C58AF9 50%, #F6AEA9 100%)',
+      brandStopStart: '#8AB4F8',
+      brandStopMid: '#C58AF9',
+      brandStopEnd: '#F6AEA9',
     },
   },
   blockColor: {

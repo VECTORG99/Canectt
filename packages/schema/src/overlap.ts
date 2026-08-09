@@ -5,12 +5,39 @@
  *   nunca se guarda a mano.
  * - createEmptySchedule / createEmptyBlock: factories convenientes.
  */
-import { randomUUID } from 'node:crypto';
-import type { Block, Schedule } from './schedule.ts';
+import type { Block, Schedule } from './schedule';
+
+/**
+ * Genera un UUID v4 usando la Web Crypto API (disponible en navegadores
+ * modernos y en Node.js >= 19). Isomórfica: sin dependencia de node:crypto.
+ */
+interface CryptoWithUuid {
+  randomUUID?: () => string;
+}
+function uuid(): string {
+  // En Node 20+ y navegadores, `crypto` es global. En entornos sin
+  // `crypto.randomUUID`, caemos a un fallback RFC4122 v4.
+  const g = globalThis as { crypto?: CryptoWithUuid };
+  const c = g.crypto;
+  if (c && typeof c.randomUUID === 'function') return c.randomUUID();
+  // Fallback determinista a partir de Math.random (no criptográfico).
+  const rnd = (n: number) => Math.floor(Math.random() * n);
+  const hex = '0123456789abcdef';
+  let out = '';
+  for (let i = 0; i < 36; i++) {
+    if (i === 8 || i === 13 || i === 18 || i === 23) out += '-';
+    else if (i === 14) out += '4';
+    else if (i === 19) out += hex[(rnd(4) & 0x3) | 0x8];
+    else out += hex[rnd(16)];
+  }
+  return out;
+}
 
 /** Convierte "HH:mm" a minutos desde medianoche. */
 export function timeToMinutes(t: string): number {
-  const [h, m] = t.split(':').map(Number);
+  const parts = t.split(':').map(Number);
+  const h = parts[0] ?? 0;
+  const m = parts[1] ?? 0;
   return h * 60 + m;
 }
 
@@ -77,7 +104,7 @@ export function computeOverlapGroups(blocks: Block[]): Block[] {
 /** Crea un bloque vacío con defaults razonables. */
 export function createEmptyBlock(partial: Partial<Block> = {}): Block {
   const now = new Date();
-  const id = partial.id ?? randomUUID();
+  const id = partial.id ?? uuid();
   return {
     id,
     title: partial.title ?? '',
@@ -95,7 +122,7 @@ export function createEmptyBlock(partial: Partial<Block> = {}): Block {
 /** Crea un horario vacío con defaults razonables. */
 export function createEmptySchedule(partial: Partial<Schedule> = {}): Schedule {
   return {
-    id: partial.id ?? randomUUID(),
+    id: partial.id ?? uuid(),
     title: partial.title ?? 'Mi horario',
     dayRange: partial.dayRange ?? { startTime: '06:00', endTime: '23:00' },
     recurrence: partial.recurrence ?? { freq: 'NONE' },
