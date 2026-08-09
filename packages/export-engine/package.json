@@ -9,8 +9,9 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./src/index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     }
   },
   "files": [
@@ -26,18 +27,22 @@
   },
   "dependencies": {
     "@canectt/schema": "workspace:*",
+    "@canectt/design-tokens": "workspace:*",
     "@react-pdf/renderer": "^3.3.8",
+    "react": "^18.3.1",
     "docx": "^9.7.1",
     "exceljs": "^4.4.0",
     "googleapis": "^144.0.0",
     "ics": "^3.8.1",
-    "jspdf": "^2.5.2",
+    "remark": "^15.0.1",
+    "remark-gfm": "^4.0.0",
     "remark-stringify": "^11.0.0",
     "unified": "^11.0.5",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
+    "@types/react": "^18.3.7",
     "typescript": "^5.6.2",
     "vitest": "^2.1.1"
   }

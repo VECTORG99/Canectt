@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { toIcs } from '../ics';
-import { toMarkdown } from '../markdown';
+import { toIcs } from '../ics.js';
+import { toMarkdown } from '../markdown.js';
 import { createEmptySchedule, createEmptyBlock } from '@canectt/schema';
 
-function makeSchedule() {
-  const schedule = createEmptySchedule({ title: 'Test' });
+function makeSchedule(timezone = 'America/Santiago') {
+  const schedule = createEmptySchedule({ title: 'Test', timezone });
   const b1 = createEmptyBlock({ title: 'Mañana', startTime: '07:00', endTime: '08:00' });
   const b2 = createEmptyBlock({ title: 'Desayuno', startTime: '08:00', endTime: '08:30' });
   return { ...schedule, blocks: [b1, b2] };
@@ -19,8 +19,24 @@ describe('toIcs', () => {
     expect(ics).toContain('BEGIN:VEVENT');
     expect(ics).toContain('SUMMARY:Mañana');
     expect(ics).toContain('SUMMARY:Desayuno');
-    expect(ics).toContain('DTSTART;TZID=America/Santiago:20250106T070000');
-    expect(ics).toContain('DTEND;TZID=America/Santiago:20250106T080000');
+    // Se emite en UTC con sufijo Z (no floating local).
+    expect(ics).toMatch(/DTSTART:\d{8}T\d{6}Z/);
+    expect(ics).toMatch(/DTEND:\d{8}T\d{6}Z/);
+  });
+
+  it('convierte la wall time de la zona IANA a UTC correctamente', () => {
+    // America/Santiago en enero (verano austral) está en UTC-3.
+    // 07:00 local → 10:00 UTC.
+    const schedule = makeSchedule('America/Santiago');
+    const ics = toIcs(schedule, { startDate: '2025-01-06' });
+    expect(ics).toContain('DTSTART:20250106T100000Z');
+    expect(ics).toContain('DTEND:20250106T110000Z');
+  });
+
+  it('respeta una zona sin offset UTC (UTC)', () => {
+    const schedule = makeSchedule('UTC');
+    const ics = toIcs(schedule, { startDate: '2025-01-06' });
+    expect(ics).toContain('DTSTART:20250106T070000Z');
   });
 
   it('agrega RRULE cuando se especifica recurrencia', () => {

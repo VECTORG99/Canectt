@@ -3,16 +3,18 @@
  * los formatos de archivo. El backend lo consume desde /api/export.
  */
 import type { Schedule } from '@canectt/schema';
-import { toIcs, type IcsOptions, type RecurrenceType } from './ics';
-import { toMarkdown } from './markdown';
-import { toPdf } from './pdf';
-import { toDocx } from './docx';
-import { toXlsx } from './xlsx';
+import { toIcs, type IcsOptions, type RecurrenceType } from './ics.js';
+import { toMarkdown } from './markdown.js';
+import { toPdf } from './pdf.js';
+import { toDocx } from './docx.js';
+import { toXlsx } from './xlsx.js';
 
 export type ExportFormat = 'pdf' | 'docx' | 'xlsx' | 'md' | 'ics';
 
 export interface ExportOptions {
   recurrence?: RecurrenceType;
+  /** Días específicos para recurrencia 'custom'. */
+  byDay?: string[];
   startDate?: string;
   count?: number;
 }
@@ -35,7 +37,7 @@ export async function exportSchedule(
   switch (format) {
     case 'pdf': {
       return {
-        data: toPdf(schedule),
+        data: await toPdf(schedule),
         mimeType: 'application/pdf',
         extension: 'pdf',
       };
@@ -64,6 +66,7 @@ export async function exportSchedule(
     case 'ics': {
       const icsOptions: IcsOptions = {
         recurrence: options.recurrence,
+        byDay: options.byDay,
         startDate: options.startDate,
         count: options.count,
       };
@@ -81,8 +84,8 @@ export async function exportSchedule(
 }
 
 // Re-exports.
-export { toIcs, type IcsOptions, type RecurrenceType } from './ics';
-export { toMarkdown } from './markdown';
-export { toPdf } from './pdf';
-export { toDocx } from './docx';
-export { toXlsx } from './xlsx';
+export { toIcs, type IcsOptions, type RecurrenceType } from './ics.js';
+export { toMarkdown } from './markdown.js';
+export { toPdf } from './pdf.js';
+export { toDocx } from './docx.js';
+export { toXlsx } from './xlsx.js';
