@@ -7,8 +7,8 @@ import { Router, type Router as RouterType } from 'express';
 import multer from 'multer';
 import { recognize } from '@canectt/recognition-engine';
 import { ScheduleSchema } from '@canectt/schema';
-import { env } from '../env';
-import { asyncHandler } from '../asyncHandler';
+import { env } from '../env.js';
+import { asyncHandler } from '../asyncHandler.js';
 
 export const recognizeRouter: RouterType = Router();
 
@@ -19,7 +19,18 @@ const upload = multer({
 
 recognizeRouter.post(
   '/',
-  upload.single('file'),
+  (req, res, next) => {
+    upload.single('file')(req, res, (err) => {
+      if (err) {
+        // MulterError (ej. archivo demasiado grande) → 400, no 500.
+        const status = err instanceof multer.MulterError ? 400 : 500;
+        const message = err instanceof Error ? err.message : 'Error al subir el archivo.';
+        res.status(status).json({ error: message });
+        return;
+      }
+      next();
+    });
+  },
   asyncHandler(async (req, res) => {
     if (!req.file) {
       res.status(400).json({ error: 'No se recibió ningún archivo.' });

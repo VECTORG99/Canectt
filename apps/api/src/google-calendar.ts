@@ -7,7 +7,7 @@ import { google, type calendar_v3 } from 'googleapis';
 import type { OAuth2Client } from 'google-auth-library';
 import type { Schedule, Block } from '@canectt/schema';
 import type { RecurrenceType } from '@canectt/export-engine';
-import { env } from './env';
+import { env } from './env.js';
 
 const SCOPES = [env.GOOGLE_OAUTH_SCOPE];
 
@@ -69,6 +69,7 @@ function blockToEvent(
   startDate: string,
   recurrence: RecurrenceType,
   count: number,
+  byDay?: string[],
 ): calendar_v3.Schema$Event {
   const recurrenceRule: string[] = [];
   switch (recurrence) {
@@ -80,6 +81,11 @@ function blockToEvent(
       break;
     case 'weekly':
       recurrenceRule.push(`RRULE:FREQ=WEEKLY;COUNT=${count}`);
+      break;
+    case 'custom':
+      if (byDay && byDay.length > 0) {
+        recurrenceRule.push(`RRULE:FREQ=WEEKLY;BYDAY=${byDay.join(',')};COUNT=${count}`);
+      }
       break;
   }
 
@@ -103,6 +109,8 @@ export interface PushToCalendarOptions {
   refreshToken: string | null;
   startDate: string;
   recurrence: RecurrenceType;
+  /** Días específicos para recurrencia 'custom'. */
+  byDay?: string[];
   count?: number;
   /** ID del calendario de Google (default: calendario primario). */
   calendarId?: string;
@@ -126,7 +134,14 @@ export async function pushScheduleToCalendar(
   const errors: string[] = [];
 
   for (const block of schedule.blocks) {
-    const event = blockToEvent(block, schedule, options.startDate, options.recurrence, count);
+    const event = blockToEvent(
+      block,
+      schedule,
+      options.startDate,
+      options.recurrence,
+      count,
+      options.byDay,
+    );
     try {
       await calendar.events.insert({ calendarId, requestBody: event });
       created++;
