@@ -7,7 +7,7 @@
  * se envía al navegador; la escritura a Calendar se hace desde el backend.
  */
 import { Router, type Router as RouterType, type Request, type Response } from 'express';
-import { ScheduleSchema, ExportOptionsSchema, type Schedule } from '@canectt/schema';
+import { ScheduleSchema, IcsExportSchema, type Schedule } from '@canectt/schema';
 import { exportSchedule } from '@canectt/export-engine';
 import { asyncHandler } from '../asyncHandler.js';
 
@@ -44,12 +44,10 @@ exportRouter.post(
 exportRouter.post(
   '/calendar/ics',
   asyncHandler(async (req: Request, res: Response) => {
-    const parsed = ExportOptionsSchema.safeParse(req.body);
+    const parsed = IcsExportSchema.safeParse(req.body);
     if (!parsed.success) {
-      res.status(400).json({
-        error: 'Parámetros de exportación inválidos.',
-        details: parsed.error.flatten(),
-      });
+      // No exponer details de Zod (information disclosure).
+      res.status(400).json({ error: 'Parámetros de exportación inválidos.' });
       return;
     }
     const { schedule, recurrence, byDay, startDate, count } = parsed.data;

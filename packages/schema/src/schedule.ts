@@ -170,18 +170,49 @@ export const CalendarExportRecurrenceSchema = z.enum([
   'custom',
 ]);
 
-export const ExportOptionsSchema = z.object({
+/**
+ * Objeto base compartido entre ICS y Google Calendar push.
+ * No incluye calendarId (solo relevante para Google push).
+ */
+const CalendarExportBaseObject = z.object({
   schedule: ScheduleSchema,
   recurrence: CalendarExportRecurrenceSchema.default('none'),
   byDay: z.array(WeekdaySchema).optional(),
-  count: z.number().int().positive().max(365).default(30),
+  count: z.number().int().positive().max(365).optional(),
   startDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'startDate debe tener formato YYYY-MM-DD')
     .optional(),
-  /** Solo para Google Calendar push: calendario destino. */
-  calendarId: z.string().optional(),
 });
+
+/**
+ * Refinement: byDay solo tiene sentido con recurrence 'custom' o 'weekly'.
+ */
+function validateByDayAgainstRecurrence(
+  data: { byDay?: string[]; recurrence: string },
+  ctx: z.RefinementCtx,
+): void {
+  if (
+    data.byDay &&
+    data.byDay.length > 0 &&
+    data.recurrence !== 'custom' &&
+    data.recurrence !== 'weekly'
+  ) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `byDay solo es válido cuando recurrence es 'custom' o 'weekly', no '${data.recurrence}'`,
+      path: ['byDay'],
+    });
+  }
+}
+
+/** Schema para exportación ICS (sin calendarId). */
+export const IcsExportSchema = CalendarExportBaseObject.superRefine(validateByDayAgainstRecurrence);
+
+/** Schema para Google Calendar push (con calendarId). */
+export const GooglePushSchema = CalendarExportBaseObject.extend({
+  calendarId: z.string().optional(),
+}).superRefine(validateByDayAgainstRecurrence);
 
 /** Tipos derivados. */
 export type TimeString = z.infer<typeof TimeStringSchema>;
@@ -193,4 +224,5 @@ export type BlockColorToken = z.infer<typeof BlockColorTokenSchema>;
 export type Block = z.infer<typeof BlockSchema>;
 export type Schedule = z.infer<typeof ScheduleSchema>;
 export type CalendarExportRecurrence = z.infer<typeof CalendarExportRecurrenceSchema>;
-export type ExportOptions = z.infer<typeof ExportOptionsSchema>;
+export type IcsExportOptions = z.infer<typeof IcsExportSchema>;
+export type GooglePushOptions = z.infer<typeof GooglePushSchema>;

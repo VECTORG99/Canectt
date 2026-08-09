@@ -13,7 +13,7 @@
  */
 import { Router, type Router as RouterType, type Request, type Response } from 'express';
 import { randomBytes } from 'node:crypto';
-import { ExportOptionsSchema } from '@canectt/schema';
+import { GooglePushSchema } from '@canectt/schema';
 import { env } from '../env.js';
 import { getAuthUrl, exchangeCodeForTokens, pushScheduleToCalendar } from '../google-calendar.js';
 import { asyncHandler } from '../asyncHandler.js';
@@ -118,12 +118,10 @@ authRouter.post(
       res.status(401).json({ error: 'No autenticado con Google.' });
       return;
     }
-    const parsed = ExportOptionsSchema.safeParse(req.body);
+    const parsed = GooglePushSchema.safeParse(req.body);
     if (!parsed.success) {
-      res.status(400).json({
-        error: 'Parámetros de exportación inválidos.',
-        details: parsed.error.flatten(),
-      });
+      // No exponer details de Zod (information disclosure).
+      res.status(400).json({ error: 'Parámetros de exportación inválidos.' });
       return;
     }
     const { schedule, recurrence, byDay, startDate, count, calendarId } = parsed.data;
