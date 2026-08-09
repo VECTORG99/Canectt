@@ -89,3 +89,8 @@ export { toMarkdown } from './markdown.js';
 export { toPdf } from './pdf.js';
 export { toDocx } from './docx.js';
 export { toXlsx } from './xlsx.js';
+export {
+  buildGoogleCalendarRenderUrl,
+  buildGoogleCalendarRenderUrls,
+  type RenderUrlOptions,
+} from './google-render.js';
