@@ -4,8 +4,8 @@
  */
 import { remark } from 'remark';
 import remarkGfm from 'remark-gfm';
-import { recognizeBlocks, type RecognitionResult } from '../recognize';
-import { normalizeToSchedule } from '../normalize';
+import { recognizeBlocks, type RecognitionResult } from '../recognize.js';
+import { normalizeToSchedule } from '../normalize.js';
 import type { Schedule } from '@canectt/schema';
 
 // Tipos mínimos del AST mdast que usamos (evita depender de @types/mdast

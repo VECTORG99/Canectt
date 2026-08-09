@@ -10,7 +10,8 @@ import {
   type Schedule,
   type BlockColorToken,
 } from '@canectt/schema';
-import type { RecognizedBlock, RecognitionResult } from './recognize';
+import { scheduleDefaults } from '@canectt/config';
+import type { RecognizedBlock, RecognitionResult } from './recognize.js';
 
 export interface NormalizeOptions {
   title?: string;
@@ -28,11 +29,12 @@ export function normalizeToSchedule(
 ): Schedule {
   const schedule = createEmptySchedule({
     title: options.title ?? 'Horario importado',
-    timezone: options.timezone ?? 'America/Santiago',
-    dayRange: options.dayRange ?? { startTime: '06:00', endTime: '23:00' },
+    timezone: options.timezone ?? scheduleDefaults.export.defaultTimezone,
+    dayRange: options.dayRange ?? { ...scheduleDefaults.editor.defaultDayRange },
   });
 
-  const color: BlockColorToken = options.defaultColor ?? 'block-blue';
+  const defaultColorToken = scheduleDefaults.blockColors.default as BlockColorToken;
+  const color: BlockColorToken = options.defaultColor ?? defaultColorToken;
 
   const blocks = result.blocks.map((rb: RecognizedBlock) =>
     createEmptyBlock({

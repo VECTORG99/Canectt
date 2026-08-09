@@ -3,8 +3,8 @@
  * texto tabulado y delega al reconocedor compartido.
  */
 import ExcelJS from 'exceljs';
-import { recognizeBlocks, type RecognitionResult } from '../recognize';
-import { normalizeToSchedule } from '../normalize';
+import { recognizeBlocks, type RecognitionResult } from '../recognize.js';
+import { normalizeToSchedule } from '../normalize.js';
 import type { Schedule } from '@canectt/schema';
 
 export interface ParseXlsxOptions {
@@ -57,7 +57,10 @@ export async function parseXlsx(
         cells.push(cellToString(values[i]).trim());
       }
       if (cells.some((c) => c !== '')) {
-        lines.push(cells.join('  '));
+        // Usamos tabulador como separador (no 2 espacios) para preservar
+        // celdas vacías: splitRow con \t mantiene las columnas vacías en
+        // su posición, mientras que splitRow con 2+ espacios las colapsa.
+        lines.push(cells.join('\t'));
       }
     });
   });

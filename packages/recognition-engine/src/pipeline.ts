@@ -3,11 +3,11 @@
  * detecta el formato del archivo y lo deriva al parser correspondiente.
  * Los cuatro parsers convergen en el mismo normalizador.
  */
-import { detectFormat, type DetectedFormat } from './detect-format';
-import { parseMarkdown } from './parsers/markdown';
-import { parsePdf } from './parsers/pdf';
-import { parseDocx } from './parsers/docx';
-import { parseXlsx } from './parsers/xlsx';
+import { detectFormat, type DetectedFormat } from './detect-format.js';
+import { parseMarkdown } from './parsers/markdown.js';
+import { parsePdf } from './parsers/pdf.js';
+import { parseDocx } from './parsers/docx.js';
+import { parseXlsx } from './parsers/xlsx.js';
 import { ScheduleSchema, type Schedule } from '@canectt/schema';
 
 export interface RecognizeInput {
@@ -30,6 +30,16 @@ export interface RecognizeOutput {
   confidence: number;
   /** True si se detectó PDF escaneado. */
   scanned: boolean;
+}
+
+/** Error de cliente (4xx) lanzado por el recognition engine. */
+export class RecognizeError extends Error {
+  status: number;
+  constructor(message: string, status = 400) {
+    super(message);
+    this.name = 'RecognizeError';
+    this.status = status;
+  }
 }
 
 /** Ejecuta el pipeline completo de reconocimiento. */
@@ -73,8 +83,10 @@ export async function recognize(input: RecognizeInput): Promise<RecognizeOutput>
       break;
     }
     default:
-      throw new Error(
+      // 400 (no 500): el usuario subió un formato no soportado.
+      throw new RecognizeError(
         `Formato no soportado. Aceptamos PDF, Word (.docx), Markdown (.md) y Excel (.xlsx).`,
+        400,
       );
   }
 

@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseMarkdown } from '../parsers/markdown';
-import { recognizeBlocks } from '../recognize';
+import { parseMarkdown } from '../parsers/markdown.js';
+import { recognizeBlocks } from '../recognize.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixturesDir = join(__dirname, '..', '..', '..', '..', 'fixtures');
