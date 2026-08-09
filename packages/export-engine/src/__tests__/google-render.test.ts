@@ -112,6 +112,17 @@ describe('buildGoogleCalendarRenderUrl', () => {
     const url = buildGoogleCalendarRenderUrl(block, schedule, { startDate: '2025-01-06' });
     expect(url).toContain('ctz=Europe%2FMadrid');
   });
+
+  it('no deja %2F en el parámetro dates (regresión del regex no-op)', () => {
+    const schedule = makeSchedule();
+    const block = schedule.blocks[0]!;
+    const url = buildGoogleCalendarRenderUrl(block, schedule, { startDate: '2025-01-06' });
+    // El separador `/` dentro de `dates` debe ser literal, no %2F.
+    const datesParam = url.match(/[?&]dates=([^&]*)/)?.[1];
+    expect(datesParam).toBeDefined();
+    expect(datesParam).not.toContain('%2F');
+    expect(datesParam).toBe('20250106T070000/20250106T080000');
+  });
 });
 
 describe('buildGoogleCalendarRenderUrls', () => {

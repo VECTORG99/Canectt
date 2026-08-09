@@ -106,9 +106,18 @@ export function buildGoogleCalendarRenderUrl(
     params.set('recur', rrule);
   }
 
-  // URLSearchParams.toString() codifica / como %2F. Reemplazamos para
-  // que Google Calendar reciba el / literal en el parámetro dates.
-  const queryString = params.toString().replace(/dates=([^&]*)&/, 'dates=$1&');
+  // URLSearchParams.toString() codifica `/` como %2F. Decodificamos solo el
+  // separador `/` dentro del parámetro `dates` para que Google Calendar reciba
+  // el `/` literal (formato YYYYMMDDTHHMMSS/YYYYMMDDTHHMMSS). El regex anterior
+  // (`/dates=([^&]*)&/`) era un no-op: capturaba el valor y lo devolvía sin
+  // decodificar, y además fallaba si `dates` era el último parámetro (sin `&`
+  // final). Este regex decodifica `%2F` → `/` y funciona en cualquier posición.
+  const queryString = params
+    .toString()
+    .replace(
+      /(dates=)([^&]*)/g,
+      (_m, prefix: string, value: string) => `${prefix}${value.replace(/%2F/g, '/')}`,
+    );
   return `https://calendar.google.com/calendar/render?${queryString}`;
 }
 
