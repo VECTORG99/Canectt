@@ -38,7 +38,6 @@ Runtime dependencies:
   - zod                                                   —  MIT
   - framer-motion                                         —  MIT
   - express                                               —  MIT
-  - passport, passport-google-oauth20                     —  MIT
   - remark, remark-parse, remark-gfm, remark-stringify    —  MIT
   - helmet                                                —  MIT
   - cors                                                  —  MIT

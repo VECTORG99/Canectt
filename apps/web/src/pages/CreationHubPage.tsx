@@ -112,6 +112,12 @@ export default function CreationHubPage() {
     navigate(`/horario/${id}`);
   }
 
+  /** Descarta el horario parcial y lleva al usuario al flujo Manual. */
+  function dismissToManual() {
+    setPendingImport(null);
+    handleManual();
+  }
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
       <motion.h1
@@ -212,7 +218,6 @@ export default function CreationHubPage() {
               {dictionary.creation.import.examplesModalTitle}
             </h2>
             <p className="mb-4 text-text-secondary">{dictionary.creation.import.acceptedFormats}</p>
-            {/* TODO: insertar capturas reales de examples/templates cuando existan. */}
             <div className="grid gap-4 tablet:grid-cols-2">
               {formatChips().map((f) => (
                 <div key={f.ext} className="card p-4">
@@ -222,6 +227,13 @@ export default function CreationHubPage() {
                   <p className="mt-2 text-sm text-text-secondary">
                     Tabla con columnas "Hora" y "Actividad".
                   </p>
+                  <a
+                    href={`/templates/rutina-gimnasio${f.ext}`}
+                    download
+                    className="btn btn-ghost mt-3 text-sm"
+                  >
+                    Descargar ejemplo {f.ext}
+                  </a>
                 </div>
               ))}
             </div>
@@ -251,13 +263,16 @@ export default function CreationHubPage() {
               {dictionary.creation.import.recognitionWarning}
             </h2>
             <p className="mb-5 text-text-secondary">{pendingImport.warning}</p>
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-col gap-2 tablet:flex-row tablet:justify-end">
               <button
                 type="button"
                 className="btn btn-ghost"
                 onClick={() => setPendingImport(null)}
               >
                 {dictionary.common.cancel}
+              </button>
+              <button type="button" className="btn btn-ghost" onClick={dismissToManual}>
+                {dictionary.creation.import.goToManual}
               </button>
               <button
                 type="button"
