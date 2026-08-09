@@ -7,8 +7,8 @@
  * se envía al navegador; la escritura a Calendar se hace desde el backend.
  */
 import { Router, type Router as RouterType, type Request, type Response } from 'express';
-import { ScheduleSchema, type Schedule } from '@canectt/schema';
-import { exportSchedule, type RecurrenceType } from '@canectt/export-engine';
+import { ScheduleSchema, ExportOptionsSchema, type Schedule } from '@canectt/schema';
+import { exportSchedule } from '@canectt/export-engine';
 import { asyncHandler } from '../asyncHandler.js';
 
 export const exportRouter: RouterType = Router();
@@ -44,23 +44,20 @@ exportRouter.post(
 exportRouter.post(
   '/calendar/ics',
   asyncHandler(async (req: Request, res: Response) => {
-    const body = req.body as {
-      schedule?: unknown;
-      recurrence?: RecurrenceType;
-      byDay?: string[];
-      startDate?: string;
-      count?: number;
-    };
-    const schedule = parseSchedule(body.schedule);
-    if (!schedule) {
-      res.status(400).json({ error: 'Horario inválido.' });
+    const parsed = ExportOptionsSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({
+        error: 'Parámetros de exportación inválidos.',
+        details: parsed.error.flatten(),
+      });
       return;
     }
+    const { schedule, recurrence, byDay, startDate, count } = parsed.data;
     const result = await exportSchedule(schedule, 'ics', {
-      recurrence: body.recurrence,
-      byDay: body.byDay,
-      startDate: body.startDate,
-      count: body.count,
+      recurrence,
+      byDay,
+      startDate,
+      count,
     });
     res.setHeader('Content-Type', result.mimeType);
     res.setHeader('Content-Disposition', `attachment; filename="horario.ics"`);
