@@ -7,9 +7,5 @@
     "types": ["node"]
   },
   "include": ["src/**/*"],
-  "references": [
-    { "path": "../../packages/schema" },
-    { "path": "../../packages/recognition-engine" },
-    { "path": "../../packages/export-engine" }
-  ]
+  "exclude": ["node_modules", "dist"]
 }

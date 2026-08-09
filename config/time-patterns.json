@@ -5,14 +5,21 @@
     {
       "id": "range-24h-hhmm",
       "description": "Rango horario 24h con guion, ej. '08:00 - 09:00', '08:00–09:00', '08:00 a 09:00'",
-      "regex": "(\\b([01]?[0-9]|2[0-3]):[0-5][0-9]\\s*(?:[-–a]+\\s*)([01]?[0-9]|2[0-3]):[0-5][0-9]\\b)",
-      "groups": { "start": 2, "end": 3 }
+      "regex": "\\b(([01]?[0-9]|2[0-3]):[0-5][0-9])\\s*(?:[-–a]+\\s*)(([01]?[0-9]|2[0-3]):[0-5][0-9])\\b",
+      "groups": { "start": 1, "end": 3 }
     },
     {
       "id": "range-12h-ampm",
       "description": "Rango horario 12h con am/pm, ej. '8am-9am', '8:00 AM - 9:00 PM', '8 a.m. - 9 a.m.'",
       "regex": "(\\b([1-9]|1[0-2])(:[0-5][0-9])?\\s*(?:a\\.?m\\.?|p\\.?m\\.?)\\s*(?:[-–a]+\\s*)([1-9]|1[0-2])(:[0-5][0-9])?\\s*(a\\.?m\\.?|p\\.?m\\.?)\\b)",
-      "groups": { "startHour": 2, "startMinute": 3, "startAmPm": 4, "endHour": 5, "endMinute": 6, "endAmPm": 7 }
+      "groups": {
+        "startHour": 2,
+        "startMinute": 3,
+        "startAmPm": 4,
+        "endHour": 5,
+        "endMinute": 6,
+        "endAmPm": 7
+      }
     },
     {
       "id": "single-24h-hhmm",
@@ -29,13 +36,38 @@
   ],
   "tableHeaders": {
     "timeColumnNames": ["hora", "horario", "time", "horas", "inicio", "desde", "de"],
-    "activityColumnNames": ["actividad", "tarea", "rutina", "evento", "activity", "task", "nombre", "descripción", "descripcion"],
+    "activityColumnNames": [
+      "actividad",
+      "tarea",
+      "rutina",
+      "evento",
+      "activity",
+      "task",
+      "nombre",
+      "descripción",
+      "descripcion"
+    ],
     "endColumnNames": ["fin", "hasta", "end", "termina", "término"]
   },
   "dayNames": {
     "es": ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"],
     "en": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
-    "abbreviations": ["lun", "mar", "mié", "jue", "vie", "sáb", "dom", "mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+    "abbreviations": [
+      "lun",
+      "mar",
+      "mié",
+      "jue",
+      "vie",
+      "sáb",
+      "dom",
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri",
+      "sat",
+      "sun"
+    ]
   },
   "recurrenceKeywords": {
     "daily": ["diario", "diariamente", "todos los días", "cada día", "daily"],
