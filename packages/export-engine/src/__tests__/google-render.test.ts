@@ -22,7 +22,7 @@ describe('buildGoogleCalendarRenderUrl', () => {
     expect(url).toContain('https://calendar.google.com/calendar/render');
     expect(url).toContain('action=TEMPLATE');
     expect(url).toContain('text=Ma%C3%B1ana');
-    expect(url).toContain('dates=20250106T070000%2F20250106T080000');
+    expect(url).toContain('dates=20250106T070000/20250106T080000');
     expect(url).toContain('ctz=America%2FSantiago');
   });
 
@@ -103,7 +103,7 @@ describe('buildGoogleCalendarRenderUrl', () => {
     const block = schedule.blocks[0]!;
     const url = buildGoogleCalendarRenderUrl(block, schedule);
     const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    expect(url).toContain(`dates=${today}T070000%2F${today}T080000`);
+    expect(url).toContain(`dates=${today}T070000/${today}T080000`);
   });
 
   it('respeta la timezone del schedule en el parámetro ctz', () => {

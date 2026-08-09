@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useScheduleStore } from '../../store/scheduleStore';
 import { dictionary } from '../../i18n/index';
 import { blocksOverlap, type Block, type Schedule, type RecurrenceFreq } from '@canectt/schema';
-import { buildGoogleCalendarRenderUrl } from '@canectt/export-engine/google-render';
+import { buildGoogleCalendarRenderUrls } from '@canectt/export-engine/google-render';
 
 const fadeUp = {
   initial: { opacity: 0, y: 12 },
@@ -219,18 +219,20 @@ export function ExportFlow() {
   }
 
   /**
-   * Abre la URL pública de Google Calendar "render" para el primer bloque
-   * del horario. Permite agregar un evento suelto sin OAuth.
-   * Si hay múltiples bloques, el usuario puede repetir para cada uno.
+   * Abre las URLs públicas de Google Calendar "render" para todos los
+   * bloques del horario. Permite agregar eventos sueltos sin OAuth.
+   * Abre una pestaña por bloque (el navegador puede bloquear múltiples
+   * popups; si es así, el usuario verá solo la primera).
    */
   function openGoogleRender() {
     if (resolvedSchedule.blocks.length === 0) return;
-    const firstBlock = resolvedSchedule.blocks[0]!;
-    const url = buildGoogleCalendarRenderUrl(firstBlock, resolvedSchedule, {
+    const urls = buildGoogleCalendarRenderUrls(resolvedSchedule, {
       recurrence: freqToRecurrence(schedule.recurrence.freq),
       byDay: schedule.recurrence.byDay,
     });
-    window.open(url, '_blank', 'noopener,noreferrer');
+    for (const url of urls) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
   }
 
   async function pushToGoogle() {

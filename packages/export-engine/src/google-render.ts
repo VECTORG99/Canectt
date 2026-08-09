@@ -14,9 +14,9 @@
  *   https://github.com/InteractionDesignFoundation/add-event-to-calendar-button
  */
 import type { Schedule, Block, Weekday } from '@canectt/schema';
+import type { RecurrenceType } from './ics.js';
 
-/** Tipo de recurrencia para la URL render (mismo enum que ICS). */
-export type RecurrenceType = 'none' | 'daily' | 'weekdays' | 'weekly' | 'custom';
+export type { RecurrenceType } from './ics.js';
 
 export interface RenderUrlOptions {
   /** Fecha de inicio en formato YYYY-MM-DD. Si no se especifica, usa hoy. */
@@ -72,6 +72,10 @@ function buildRrule(
  * El usuario puede hacer clic en la URL y Google Calendar abrirá una
  * página de "crear evento" con los datos pre-rellenados, sin necesidad
  * de OAuth ni conexión previa.
+ *
+ * Nota: el parámetro `dates` usa formato `YYYYMMDDTHHMMSS/YYYYMMDDTHHMMSS`
+ * con `/` literal (no codificado como %2F) porque Google Calendar lo
+ * espera así en la URL render.
  */
 export function buildGoogleCalendarRenderUrl(
   block: Block,
@@ -85,12 +89,13 @@ export function buildGoogleCalendarRenderUrl(
   const start = toIcalDateTime(startDate, block.startTime);
   const end = toIcalDateTime(startDate, block.endTime);
 
-  const params = new URLSearchParams({
-    action: 'TEMPLATE',
-    text: block.title || 'Bloque',
-    dates: `${start}/${end}`,
-    ctz: schedule.timezone,
-  });
+  // Construir params manualmente para evitar que URLSearchParams codifique
+  // el `/` en dates como %2F (Google Calendar espera el `/` literal).
+  const params = new URLSearchParams();
+  params.set('action', 'TEMPLATE');
+  params.set('text', block.title || 'Bloque');
+  params.set('dates', `${start}/${end}`);
+  params.set('ctz', schedule.timezone);
 
   if (block.notes) {
     params.set('details', block.notes);
@@ -101,7 +106,10 @@ export function buildGoogleCalendarRenderUrl(
     params.set('recur', rrule);
   }
 
-  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+  // URLSearchParams.toString() codifica / como %2F. Reemplazamos para
+  // que Google Calendar reciba el / literal en el parámetro dates.
+  const queryString = params.toString().replace(/dates=([^&]*)&/, 'dates=$1&');
+  return `https://calendar.google.com/calendar/render?${queryString}`;
 }
 
 /**
