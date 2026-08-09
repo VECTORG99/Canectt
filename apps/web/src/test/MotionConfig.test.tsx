@@ -1,37 +1,72 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
 import { MotionConfig } from 'framer-motion';
-import { readFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
+import type { ReactElement } from 'react';
 
 /**
- * Verifica que la app envuelve el árbol con <MotionConfig reducedMotion="user">
- * para que Framer Motion respete prefers-reduced-motion: reduce.
+ * Verifica que main.tsx envuelve el árbol de React con
+ * <MotionConfig reducedMotion="user"> para que Framer Motion respete
+ * prefers-reduced-motion: reduce del SO del usuario.
  *
- * El test de integración completa (renderizar main.tsx) requiere un DOM con
- * #root y BrowserRouter, lo cual es frágil en unit tests. En su lugar:
- * 1. Verificamos que MotionConfig acepta reducedMotion="user" en runtime.
- * 2. Verificamos que main.tsx contiene el import y el JSX de MotionConfig
- *    (test de regresión: si alguien lo quita, este test falla).
+ * Estrategia: mockear createRoot para capturar el elemento JSX que se
+ * pasa a render(), y verificar que la estructura incluye MotionConfig
+ * con reducedMotion="user" en el nivel correcto (fuera de ThemeProvider
+ * y BrowserRouter).
  */
+
+interface TreeElement {
+  type: unknown;
+  props: { children?: TreeElement; reducedMotion?: string };
+}
+
+let capturedElement: TreeElement | null = null;
+
+vi.mock('react-dom/client', () => ({
+  createRoot: () => ({
+    render: (el: ReactElement) => {
+      capturedElement = el as unknown as TreeElement; // eslint-disable-line @typescript-eslint/no-unnecessary-type-assertion
+    },
+  }),
+}));
+
+// Mock global.css para no cargar estilos en el test.
+vi.mock('../styles/global.css', () => ({}));
+
+// Mock del elemento #root en el DOM.
+beforeEach(() => {
+  document.body.innerHTML = '<div id="root"></div>';
+  capturedElement = null;
+});
+
 describe('MotionConfig reducedMotion', () => {
-  it('MotionConfig acepta reducedMotion="user" sin errores', () => {
+  it('MotionConfig acepta reducedMotion="user" y renderiza children', () => {
     const { container } = render(
       <MotionConfig reducedMotion="user">
-        <div>test</div>
+        <div>test-content</div>
       </MotionConfig>,
     );
-    expect(container.textContent).toContain('test');
+    expect(container.textContent).toContain('test-content');
   });
 
-  it('main.tsx importa y usa MotionConfig con reducedMotion="user"', () => {
-    const mainPath = join(__dirname, '..', 'main.tsx');
-    const source = readFileSync(mainPath, 'utf8');
-    expect(source).toContain("import { MotionConfig } from 'framer-motion'");
-    expect(source).toContain('reducedMotion="user"');
-    expect(source).toContain('<MotionConfig reducedMotion="user">');
+  it('main.tsx envuelve el árbol con MotionConfig reducedMotion="user"', async () => {
+    // Importar main.tsx dinámicamente para que el mock de createRoot se aplique.
+    await import('../main');
+
+    expect(capturedElement).not.toBeNull();
+    const tree = capturedElement!;
+
+    // StrictMode > MotionConfig > ThemeProvider > BrowserRouter > App
+    const motionConfig = tree.props.children;
+    expect(motionConfig).toBeDefined();
+    expect(motionConfig!.type).toBe(MotionConfig);
+    expect(motionConfig!.props.reducedMotion).toBe('user');
+
+    // ThemeProvider dentro de MotionConfig.
+    const themeProvider = motionConfig!.props.children;
+    expect(themeProvider).toBeDefined();
+
+    // BrowserRouter dentro de ThemeProvider.
+    const browserRouter = themeProvider!.props.children;
+    expect(browserRouter).toBeDefined();
   });
 });
