@@ -12,10 +12,10 @@ Esto es coherente con que el producto en sí (la interfaz de Canectt) es en espa
 
 **Inglés** se mantiene como espejo para los archivos centrales, con el sufijo `.en.md`:
 
-| Canónico (es)            | Espejo (en)            |
-| ------------------------ | ---------------------- |
-| `AGENTS.md`              | `AGENTS.en.md`         |
-| `CONTEXT.md`             | `CONTEXT.en.md`        |
+| Canónico (es) | Espejo (en)     |
+| ------------- | --------------- |
+| `AGENTS.md`   | `AGENTS.en.md`  |
+| `CONTEXT.md`  | `CONTEXT.en.md` |
 
 Si el objetivo cambia a atraer contribuidores de habla inglesa desde el día uno, se puede invertir la relación (inglés canónico, español espejo). La decisión se documenta en `GOVERNANCE.md`.
 

@@ -57,9 +57,13 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./apps/web/Dockerfile
+          file: ./Dockerfile.web
           push: true
-          tags: ghcr.io/${{ github.repository }}/web:${{ github.ref_name }}
+          # Imagen del frontend (Caddy sirve estáticos + reverse proxy a `api`).
+          # Coincide con el servicio `web` de docker-compose.yml.
+          tags: |
+            ghcr.io/${{ github.repository }}/web:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}/web:latest
 
       - name: Build & push api image
         uses: docker/build-push-action@v6
@@ -67,4 +71,8 @@ jobs:
           context: .
           file: ./apps/api/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository }}/api:${{ github.ref_name }}
+          # Imagen del backend Express. Coincide con el servicio `api`
+          # de docker-compose.yml.
+          tags: |
+            ghcr.io/${{ github.repository }}/api:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}/api:latest

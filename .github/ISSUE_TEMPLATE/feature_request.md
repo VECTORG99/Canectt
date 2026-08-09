@@ -1,7 +1,7 @@
 ---
 name: Feature request
 about: Propón una funcionalidad para Canectt
-title: "[feature] "
+title: '[feature] '
 labels: enhancement
 ---
 
@@ -19,5 +19,5 @@ labels: enhancement
 
 ## Impacto en la especificación
 
-- ¿A qué sección afecta? [ ] tech_stack  [ ] screens  [ ] data_model  [ ] recognition_engine  [ ] export  [ ] otro
+- ¿A qué sección afecta? [ ] tech_stack [ ] screens [ ] data_model [ ] recognition_engine [ ] export [ ] otro
 - Referencia a `PLAN.md` o `CONTEXT.md` si aplica:

@@ -4,9 +4,9 @@
 #   - falta de tests
 #   - componentes no responsive
 # Nunca reemplaza la revisión humana; es primera pasada automática.
-language: "es"
+language: 'es'
 reviews:
-  profile: "assertive"
+  profile: 'assertive'
   request_changes_workflow: false
   high_level_summary: true
   poem: false
@@ -15,26 +15,26 @@ reviews:
     enabled: true
     drafts: false
   path_instructions:
-    - path: "apps/web/**"
+    - path: 'apps/web/**'
       instructions: |
         Revisa especialmente:
         - valores hardcodeados (colores/textos/rutas) que deban ser tokens o i18n
         - componentes que no sean mobile-first o no cubran los 3 breakpoints
         - falta de alternativas operables por teclado para drag-and-drop
         - accesibilidad (foco visible, contraste AA, prefers-reduced-motion)
-    - path: "packages/recognition-engine/**"
+    - path: 'packages/recognition-engine/**'
       instructions: |
         Revisa especialmente:
         - patrones de horario hardcodeados en código (deben vivir en config/time-patterns.json)
         - validación Zod en cada frontera
         - manejo de PDFs escaneados (fallback a flujo manual, no fallo silencioso)
-    - path: "packages/export-engine/**"
+    - path: 'packages/export-engine/**'
       instructions: |
         Revisa especialmente:
         - uso de RRULE correcta para recurrencias
         - manejo de timezone IANA
         - que ningún exportador dependa de servicios de pago o binarios propietarios
-    - path: "apps/api/**"
+    - path: 'apps/api/**'
       instructions: |
         Revisa especialmente:
         - que el client secret de Google nunca se envíe al navegador
