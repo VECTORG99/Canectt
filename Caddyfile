@@ -1,0 +1,28 @@
+# Caddyfile para Canectt (producción via docker-compose).
+#
+# Caddy sirve los estáticos del frontend desde /srv/web y hace de reverse
+# proxy hacia el servicio `api` para todas las rutas /api/*.
+# Así las llamadas relativas del navegador (fetch('/api/...')) llegan al
+# backend sin necesidad de configurar CORS entre contenedores ni exponer
+# el puerto de la API directamente al navegador.
+
+:80 {
+	# Reverse proxy: todo /api/* va al backend Express.
+	handle /api/* {
+		reverse_proxy api:8787
+	}
+
+	# Resto: servir estáticos del frontend (SPA fallback a index.html).
+	handle {
+		root * /srv/web
+		try_files {path} /index.html
+		file_server
+	}
+
+	# Cabeceras de seguridad básicas.
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+}

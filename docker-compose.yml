@@ -1,24 +1,48 @@
-version: '3.9'
+# docker-compose para Canectt.
+#
+# Tres servicios (patrón del prompt: un contenedor para apps/web, uno para
+# apps/api, uno opcional para Postgres):
+#   - web:  Caddy sirve los estáticos del frontend Y hace de reverse proxy
+#           hacia `api` para /api/*. Es el único puerto expuesto al navegador.
+#   - api:  Backend Express (Node). Solo accesible dentro de la red de Docker.
+#   - db:   PostgreSQL (comentado por defecto — solo se activa si se usa la
+#           persistencia opcional de Fase 2).
+#
+# Uso:
+#   cp .env.example .env       # completa GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET
+#   docker compose up --build  # web en http://localhost:80, API interno en :8787
 
 services:
-  canectt:
+  web:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.web
     ports:
-      - '5173:5173' # Web (Vite preview / serve)
-      - '8787:8787' # API (Express)
+      - '80:80' # Caddy (frontend + reverse proxy)
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    expose:
+      - '8787' # Solo dentro de la red de Docker; el navegador pasa por Caddy
     environment:
       NODE_ENV: production
       API_PORT: 8787
-      API_PUBLIC_URL: http://localhost:8787
-      WEB_PUBLIC_URL: http://localhost:5173
-      CORS_ALLOWED_ORIGINS: http://localhost:5173
+      API_PUBLIC_URL: http://api:8787
+      WEB_PUBLIC_URL: http://localhost
+      CORS_ALLOWED_ORIGINS: http://localhost
       # Google OAuth — configurar en .env o docker-compose.override.yml
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:8787/api/auth/google/callback}
-      SESSION_SECRET: ${SESSION_SECRET:-change-me-in-production}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost/api/auth/google/callback}
+      # SESSION_SECRET es obligatorio en producción (>= 32 chars).
+      # Sin valor, el backend rechaza arrancar (ver apps/api/src/env.ts).
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET es obligatorio}
     restart: unless-stopped
     healthcheck:
       test:
@@ -32,3 +56,18 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+
+  # PostgreSQL — solo se activa si se usa la persistencia opcional (Fase 2).
+  # Descomentar y definir DATABASE_URL en el servicio `api` para usarla.
+  # db:
+  #   image: postgres:16-alpine
+  #   environment:
+  #     POSTGRES_DB: canectt
+  #     POSTGRES_USER: canectt
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD es obligatorio}
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+  #   restart: unless-stopped
+
+# volumes:
+#   pgdata:
