@@ -1,6 +1,7 @@
 # Canectt
 
 <!-- CI badge placeholder — reemplazar cuando el workflow pr-check.yml exista -->
+
 ![CI](https://github.com/OWNER/canectt/actions/workflows/pr-check.yml/badge.svg)
 
 > Convertí cualquier documento en un horario editable y llevalo directo a tu calendario, sin copiar y pegar nada a mano.
@@ -16,7 +17,7 @@ Proyecto en desarrollo. Ver [`PLAN.md`](./PLAN.md) para el roadmap y los stage g
 - **Frontend**: React 18 + Vite + TypeScript, Tailwind + tokens CSS, Framer Motion, @dnd-kit, Zustand, React Hook Form + Zod.
 - **Backend**: Node.js LTS + Express + Zod; Passport.js (Google OAuth20) solo para Calendar.
 - **Parsing**: unpdf (PDF), mammoth (Word), exceljs (Excel), remark+remark-gfm (Markdown).
-- **Export**: @react-pdf/renderer, docx, exceljs, plantilla propia+remark-stringify, ics, googleapis.
+- **Export**: jsPDF (PDF), docx, exceljs, Markdown propio, ics (RFC 5545), googleapis (Calendar).
 - **Tests**: Vitest + React Testing Library; Playwright e2e; axe-core a11y.
 - **Licencia**: Apache-2.0.
 
@@ -29,6 +30,13 @@ pnpm install
 cp .env.example .env       # completa GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET
 pnpm dev:web               # http://localhost:5173
 pnpm dev:api               # http://localhost:8787 (en otra terminal)
+```
+
+## Docker
+
+```bash
+cp .env.example .env       # completa las variables de Google OAuth
+docker compose up --build  # web en :5173, API en :8787
 ```
 
 ## Documentación

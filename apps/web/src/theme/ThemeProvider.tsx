@@ -20,8 +20,12 @@ function getSystemTheme(): ResolvedTheme {
 
 function getStoredMode(): ThemeMode {
   if (typeof window === 'undefined') return 'system';
-  const stored = window.localStorage.getItem(STORAGE_KEY);
-  if (stored === 'light' || stored === 'dark' || stored === 'system') return stored;
+  try {
+    const stored = window.localStorage?.getItem(STORAGE_KEY);
+    if (stored === 'light' || stored === 'dark' || stored === 'system') return stored;
+  } catch {
+    // localStorage puede no estar disponible (ej. modo privado, tests).
+  }
   return 'system';
 }
 
