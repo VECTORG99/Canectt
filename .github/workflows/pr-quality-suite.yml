@@ -1,0 +1,73 @@
+name: pr-quality-suite
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: pr-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  coverage:
+    name: Cobertura de tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test -- --run --coverage
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: '**/coverage'
+          retention-days: 14
+
+  accessibility:
+    name: Auditoría de accesibilidad (axe-core)
+    runs-on: ubuntu-latest
+    needs: coverage
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:web
+      - name: Run axe a11y audit
+        run: pnpm --filter @canectt/web run a11y
+
+  license-audit:
+    name: Auditoría de licencias de dependencias
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: License audit
+        run: pnpm exec license-checker --production --summary --failOn "GPL-3.0;AGPL-3.0;Elastic-2.0;Unlicensed" || true
+      - name: Generate NOTICE
+        run: pnpm exec license-checker --production --out NOTICE.generated.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: notice-generated
+          path: NOTICE.generated.txt
