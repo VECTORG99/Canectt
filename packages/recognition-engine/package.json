@@ -26,13 +26,15 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@canectt/schema": "workspace:*",
     "@canectt/config": "workspace:*",
+    "@canectt/schema": "workspace:*",
+    "@napi-rs/canvas": "^1.0.5",
     "exceljs": "^4.4.0",
     "mammoth": "^1.8.0",
     "remark": "^15.0.1",
     "remark-gfm": "^4.0.0",
     "remark-parse": "^11.0.0",
+    "tesseract.js": "^7.0.0",
     "unified": "^11.0.5",
     "unpdf": "^0.12.0",
     "zod": "^3.23.8"

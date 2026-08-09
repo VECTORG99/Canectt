@@ -19,6 +19,10 @@ export interface RecognizeInput {
   title?: string;
   /** Zona horaria IANA. */
   timezone?: string;
+  /** Si true, intenta OCR cuando se detecta PDF escaneado (default: true). */
+  enableOcr?: boolean;
+  /** Callback de progreso OCR (0-100). */
+  onOcrProgress?: (progress: number, status: string) => void;
 }
 
 export interface RecognizeOutput {
@@ -30,6 +34,8 @@ export interface RecognizeOutput {
   confidence: number;
   /** True si se detectó PDF escaneado. */
   scanned: boolean;
+  /** True si se aplicó OCR exitosamente. */
+  ocrApplied: boolean;
 }
 
 /** Error de cliente (4xx) lanzado por el recognition engine. */
@@ -50,6 +56,7 @@ export async function recognize(input: RecognizeInput): Promise<RecognizeOutput>
   let confidence = 1;
   let warning: string | null = null;
   let scanned = false;
+  let ocrApplied = false;
 
   switch (format) {
     case 'markdown': {
@@ -61,11 +68,17 @@ export async function recognize(input: RecognizeInput): Promise<RecognizeOutput>
       break;
     }
     case 'pdf': {
-      const r = await parsePdf(input.data, { title: input.title, timezone: input.timezone });
+      const r = await parsePdf(input.data, {
+        title: input.title,
+        timezone: input.timezone,
+        enableOcr: input.enableOcr,
+        onOcrProgress: input.onOcrProgress,
+      });
       schedule = r.schedule;
       confidence = r.recognition.confidence;
       warning = r.recognition.warning;
       scanned = r.scanned;
+      ocrApplied = r.ocrApplied;
       break;
     }
     case 'docx': {
@@ -100,5 +113,5 @@ export async function recognize(input: RecognizeInput): Promise<RecognizeOutput>
     confidence = Math.min(confidence, 0.5);
   }
 
-  return { schedule, format, warning, confidence, scanned };
+  return { schedule, format, warning, confidence, scanned, ocrApplied };
 }

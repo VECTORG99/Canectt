@@ -53,6 +53,7 @@ recognizeRouter.post(
       warning: result.warning,
       confidence: result.confidence,
       scanned: result.scanned,
+      ocrApplied: result.ocrApplied,
     });
   }),
 );
