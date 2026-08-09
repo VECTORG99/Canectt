@@ -1,0 +1,42 @@
+# Dockerfile para el frontend de Canectt (apps/web) + reverse proxy Caddy.
+# Multi-stage: construye el frontend con Vite, luego sirve los estáticos
+# con Caddy, que además hace de reverse proxy hacia el servicio `api`
+# para que las llamadas relativas /api/* del navegador lleguen al backend.
+
+# --- Stage 1: Instalar dependencias ---
+FROM node:20-slim AS deps
+WORKDIR /app
+RUN corepack enable
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY apps/web/package.json apps/web/
+COPY packages/schema/package.json packages/schema/
+COPY packages/config/package.json packages/config/
+COPY packages/design-tokens/package.json packages/design-tokens/
+RUN pnpm install --frozen-lockfile
+
+# --- Stage 2: Build ---
+FROM node:20-slim AS builder
+WORKDIR /app
+RUN corepack enable
+COPY --from=deps /app/node_modules ./node_modules
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY apps/web apps/web
+COPY packages packages
+COPY config config
+# Build de packages compartidos que apps/web importa por alias en build.
+RUN pnpm --filter @canectt/design-tokens build \
+  && pnpm --filter @canectt/schema build \
+  && pnpm --filter @canectt/config build
+RUN pnpm --filter @canectt/web build
+
+# --- Stage 3: Producción (Caddy sirve estáticos + proxy /api) ---
+FROM caddy:2-alpine AS runner
+
+# Copiar los estáticos del frontend.
+COPY --from=builder /app/apps/web/dist /srv/web
+# Copiar la configuración de Caddy (reverse proxy + static files).
+COPY Caddyfile /etc/caddy/Caddyfile
+
+EXPOSE 80
+
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]

@@ -51,6 +51,7 @@
     "@types/node": "^20.14.0",
     "eslint": "^9.10.0",
     "eslint-config-prettier": "^9.1.0",
+    "googleapis": "^144.0.0",
     "husky": "^9.1.6",
     "license-checker": "^25.0.1",
     "lint-staged": "^15.2.10",
