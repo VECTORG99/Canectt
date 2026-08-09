@@ -56,6 +56,7 @@ export const es = {
        * o detecta un PDF escaneado. El usuario debe verlo antes de ir al editor. */
       recognitionWarning: 'Aviso de reconocimiento',
       continueAnyway: 'Continuar igual',
+      goToManual: 'Ir al flujo Manual',
     },
     manual: {
       title: 'Manual',
