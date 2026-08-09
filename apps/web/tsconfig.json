@@ -6,9 +6,17 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["vite/client", "node"],
     "noEmit": true,
-    "rootDir": ".",
     "module": "ESNext",
-    "moduleResolution": "Bundler"
+    "moduleResolution": "Bundler",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@canectt/schema": ["../../packages/schema/src/index.ts"],
+      "@canectt/schema/*": ["../../packages/schema/src/*"],
+      "@canectt/config": ["../../packages/config/src/index.ts"],
+      "@canectt/design-tokens": ["../../packages/design-tokens/src/index.ts"],
+      "@canectt/export-engine": ["../../packages/export-engine/src/index.ts"],
+      "@canectt/export-engine/*": ["../../packages/export-engine/src/*"]
+    }
   },
   "include": [
     "src/**/*",

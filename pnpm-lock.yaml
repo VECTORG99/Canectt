@@ -150,6 +150,9 @@ importers:
       '@canectt/design-tokens':
         specifier: workspace:*
         version: link:../../packages/design-tokens
+      '@canectt/export-engine':
+        specifier: workspace:*
+        version: link:../../packages/export-engine
       '@canectt/schema':
         specifier: workspace:*
         version: link:../../packages/schema
