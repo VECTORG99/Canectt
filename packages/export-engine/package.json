@@ -13,7 +13,9 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "lint": "eslint .",
@@ -25,12 +27,13 @@
   "dependencies": {
     "@canectt/schema": "workspace:*",
     "@react-pdf/renderer": "^3.3.8",
-    "docx": "^8.5.0",
+    "docx": "^9.7.1",
     "exceljs": "^4.4.0",
+    "googleapis": "^144.0.0",
+    "ics": "^3.8.1",
+    "jspdf": "^2.5.2",
     "remark-stringify": "^11.0.0",
     "unified": "^11.0.5",
-    "ics": "^3.8.1",
-    "googleapis": "^144.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
