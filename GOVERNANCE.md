@@ -16,7 +16,7 @@ Persona con permisos de escritura en el repositorio y capacidad de aprobar/merge
 
 - Revisar PRs con criterio técnico y respeto por las [reglas no negociables](./AGENTS.md#reglas-de-negocio-no-negociables).
 - Asegurar que los checks de CI pasen antes de mergear.
-- Mantener `PLAN.md`, `CONTEXT.md` y `AGENTS.md` actualizados.
+- Mantener `CONTEXT.md` y `AGENTS.md` actualizados, y el roadmap vivo en GitHub Issues.
 - Cerrar issues resueltos y moderar discussions.
 
 ### Lead maintainer
@@ -37,7 +37,7 @@ La decisión la toma el lead maintainer, consultando a los mantenedores existent
 ## Toma de decisiones
 
 - **Decisiones pequeñas** (bugs, refactor menor, docs): el primer mantenedor que aprueba, mergea.
-- **Decisiones medianas** (nueva feature dentro del alcance de `PLAN.md`): un PR con discusión abierta; se mergea con al menos una aprobación de mantenedor y CI verde.
+- **Decisiones medianas** (nueva feature dentro del alcance del roadmap en GitHub Issues): un PR con discusión abierta; se mergea con al menos una aprobación de mantenedor y CI verde.
 - **Decisiones grandes** (cambios de arquitectura, nuevas dependencias fuera del stack, cambios de licencia, cambios en este archivo): se documentan en un Issue o Discussion con etiqueta `governance`, se busca consenso y, en su defecto, decide el lead maintainer.
 
 Todas las decisiones que afecten al proyecto se documentan en commits/PRs visibles. No hay decisiones privadas que afecten al código.
@@ -48,8 +48,15 @@ Los agentes (Claude Code, Cursor, OpenCode, Copilot, Devin, etc.) pueden operar 
 
 ## Release stage gates
 
-Adaptado de `os-santiago/homedir`. Ver [`PLAN.md`](./PLAN.md#stage-gates-resumen) para los criterios completos:
+Adaptado de `os-santiago/homedir`. El proyecto avanza por stage gates; cada uno se alcanza cuando se cumplen sus criterios y se etiqueta con un tag de versión (`v0.1.0-alpha`, `v0.2.0-beta`, etc.) registrado en `CHANGELOG.md`.
 
 - **Alpha** → **Beta** → **Release Candidate** → **General Availability**.
 
-Cada stage gate se alcanza cuando se cumplen sus criterios. El avance se documenta en `CHANGELOG.md` y se etiqueta con un tag de versión (`v0.1.0-alpha`, `v0.2.0-beta`, etc.).
+Criterios por stage:
+
+- **Alpha**: funcionalidad core usable internamente; tests y CI en verde; puede haber bugs y UX sin pulir.
+- **Beta**: funcionalidad core completa; sin bugs P0/P1 abiertos; e2e y a11y en verde; feedback externo recogido.
+- **Release Candidate**: sin bugs P0/P1/P2 abiertos; documentación de usuario completa; despliegue Docker verificado; auditoría de seguridad pasada.
+- **General Availability**: sin bugs abiertos sin justificar; SLA/soporte definido; release notes y assets publicados.
+
+El avance de stage se decide como **decisión grande** (ver arriba).

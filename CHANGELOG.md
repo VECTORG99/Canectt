@@ -13,4 +13,3 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Tooling base: TypeScript estricto, ESLint+Prettier, commitlint, Husky+lint-staged.
 - Archivos de gobernanza: AGENTS.md, CONTEXT.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md, GOVERNANCE.md.
 - Licencia Apache-2.0 y NOTICE.
-- Plan maestro de implementación (PLAN.md).
