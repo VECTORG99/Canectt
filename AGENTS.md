@@ -116,3 +116,4 @@ Calcado de `PLAN.md`:
 - [ ] Ningún valor nuevo hardcodeado.
 - [ ] UI verificada en 3 breakpoints (móvil/tablet/escritorio) y ambos temas (claro/oscuro).
 - [ ] Sin regresiones de accesibilidad (axe-core en CI).
+- [ ] Al mergear el PR, **eliminar la rama** (local y remota): `gh pr merge --squash --delete-branch`. No se mantienen ramas de feature/fix vivas tras el merge.

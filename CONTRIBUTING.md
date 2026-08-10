@@ -35,6 +35,8 @@ Trunk-based con ramas cortas:
 
 Abre un PR contra `main`. Squash-merge con el mensaje Conventional Commit correspondiente.
 
+**Ciclo de vida de la rama**: una vez mergeado el PR a `main`, la rama **se elimina** (tanto local como remotamente). No se mantienen ramas de feature/fix vivas tras el merge. Al crear el PR con `gh pr create`, usa `--delete-branch` o marca "Delete branch" en la UI de GitHub; al mergear con `gh pr merge`, usa `--delete-branch`. Esto evita ramas obsoletas que divergen de `main` y se confunden con trabajo en curso.
+
 ## Formato de commits
 
 Conventional Commits, verificado automáticamente por commitlint:
