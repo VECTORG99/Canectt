@@ -17,14 +17,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm test -- --run --coverage
+      - run: pnpm -r test -- --coverage --coverage.reporter=lcov --coverage.reporter=text
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
@@ -44,14 +42,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build:web
+      - name: Install Playwright browsers
+        run: pnpm --filter @canectt/web exec playwright install --with-deps chromium
       - name: Run axe a11y audit
         run: pnpm --filter @canectt/web run a11y
 
@@ -61,8 +59,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
