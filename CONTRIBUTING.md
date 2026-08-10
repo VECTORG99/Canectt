@@ -6,7 +6,7 @@
 
 1. Lee [`CONTEXT.md`](./CONTEXT.md) para entender el "por qué" del proyecto.
 2. Lee [`AGENTS.md`](./AGENTS.md) para conocer comandos, estructura y convenciones (sí, también si eres una persona; está pensado para ser leído por cualquiera).
-3. Lee [`PLAN.md`](./PLAN.md) para saber en qué fase está el proyecto y qué falta.
+3. Revisa los [issues de GitHub](https://github.com/VECTORG99/Canectt/issues) para ver el roadmap, los siguientes pasos y qué falta (organizados por labels de prioridad P0–P3).
 
 ## Levantar el proyecto local
 

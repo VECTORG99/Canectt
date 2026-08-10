@@ -86,4 +86,4 @@ Patrones tomados de `VECTORG99/Artemisa` y `os-santiago/homedir`: `AGENTS.md` + 
 
 ## Estado actual
 
-Ver `PLAN.md` para el roadmap detallado y `CHANGELOG.md` para el historial de versiones.
+Ver los issues de GitHub para el roadmap detallado y `CHANGELOG.md` para el historial de versiones.
