@@ -86,4 +86,4 @@ Patterns taken from `VECTORG99/Artemisa` and `os-santiago/homedir`: `AGENTS.md` 
 
 ## Current status
 
-See `PLAN.md` for the detailed roadmap and `CHANGELOG.md` for the version history.
+See GitHub issues for the detailed roadmap and `CHANGELOG.md` for the version history.

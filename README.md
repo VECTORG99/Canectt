@@ -182,7 +182,6 @@ canectt/
 ├── .devcontainer/              # Entorno reproducible
 ├── docker-compose.yml          # web (Caddy) + api + db (opcional)
 ├── Caddyfile                   # Reverse proxy /api/* → api
-├── PLAN.md                     # Roadmap con stage gates (Alpha → Beta → RC → GA)
 ├── CONTEXT.md                  # Contexto de producto y decisiones de arquitectura
 └── AGENTS.md                   # Instrucciones para agentes de código
 ```
@@ -317,8 +316,8 @@ Branch protection de `main` requiere checks verdes + aprobación. Commits siguen
 
 ## Documentación
 
-- [`PLAN.md`](./PLAN.md) — roadmap de implementación con stage gates (Alpha → Beta → RC → GA).
 - [`CONTEXT.md`](./CONTEXT.md) / [`CONTEXT.en.md`](./CONTEXT.en.md) — contexto de producto y decisiones de arquitectura (y su razón).
+- [Issues de GitHub](https://github.com/VECTORG99/Canectt/issues) — roadmap y siguientes pasos (organizados por labels de prioridad P0–P3).
 - [`AGENTS.md`](./AGENTS.md) / [`AGENTS.en.md`](./AGENTS.en.md) — instrucciones para agentes de código.
 - [`CONTRIBUTING.md`](./CONTRIBUTING.md) — cómo contribuir.
 - [`SECURITY.md`](./SECURITY.md) — política de seguridad y reporte de vulnerabilidades.

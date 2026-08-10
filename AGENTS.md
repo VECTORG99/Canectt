@@ -83,7 +83,7 @@ config/               # Configuración versionada (schedule-defaults.json, time-
 
 ## Reglas de negocio no negociables
 
-Ver `PLAN.md` y la especificación original. Resumen:
+Ver `CONTEXT.md` y los issues de GitHub para el roadmap. Resumen:
 
 1. **Sin hardcoding**: colores/espaciados = tokens CSS; textos = diccionario i18n; secretos/URLs = `.env`; rangos/duraciones/tamaños = `config/*.json`.
 2. **Sin bugs por construcción**: TS estricto; Zod en cada frontera (API, parsers, formularios); test por parser/exportador; lint+formato obligatorio pre-commit; CI bloquea merges.
@@ -106,7 +106,7 @@ Ver `PLAN.md` y la especificación original. Resumen:
 
 ## Definición de terminado (por PR)
 
-Calcado de `PLAN.md`:
+Calcado de `CONTEXT.md` y la especificación original:
 
 - [ ] Lint (ESLint + Prettier) sin errores.
 - [ ] `tsc --noEmit` sin errores.

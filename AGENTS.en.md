@@ -83,7 +83,7 @@ config/               # Versioned config (schedule-defaults.json, time-patterns.
 
 ## Non-negotiable business rules
 
-See `PLAN.md` and the original spec. Summary:
+See `CONTEXT.en.md` and GitHub issues for the roadmap. Summary:
 
 1. **No hardcoding**: colors/spacing = CSS tokens; text = i18n dictionary; secrets/URLs = `.env`; ranges/durations/sizes = `config/*.json`.
 2. **No bugs by construction**: strict TS; Zod at every boundary (API, parsers, forms); tests per parser/exporter; lint+format mandatory pre-commit; CI blocks merges.
@@ -106,7 +106,7 @@ See `PLAN.md` and the original spec. Summary:
 
 ## Definition of done (per PR)
 
-Mirrored from `PLAN.md`:
+Mirrored from `CONTEXT.en.md` and the original spec:
 
 - [ ] Lint (ESLint + Prettier) clean.
 - [ ] `tsc --noEmit` clean.
